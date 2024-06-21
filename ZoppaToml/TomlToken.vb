@@ -40,6 +40,18 @@ Public Class TomlToken
         ''' <summary>偽リテラル。</summary>
         FalseLiteral
 
+        ''' <summary>数値。</summary>
+        NumberLiteral
+
+        ''' <summary>inf。</summary>
+        InfLiteral
+
+        ''' <summary>nan。</summary>
+        NanLiteral
+
+        ''' <summary>配列。</summary>
+        Array
+
     End Enum
 
     ' トークンの種類
