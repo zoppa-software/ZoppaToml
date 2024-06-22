@@ -50,6 +50,8 @@ Module TomlDefineModule
 
     Public Const ByteLowO As Byte = AscW("o"c)
 
+    Public Const ByteLowR As Byte = AscW("r"c)
+
     Public Const ByteLowT As Byte = AscW("t"c)
 
     Public Const ByteLowX As Byte = AscW("x"c)

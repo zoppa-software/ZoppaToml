@@ -168,6 +168,9 @@ Public Module TomlLexical
         Dim start = pointer.Index
 
         Dim keys = LexicalKey(raw, pointer)
+        If keys.Count <= 0 Then
+            Throw New TomlSyntaxException($"キーが見つかりません:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
+        End If
 
         SkipChars(raw, pointer, ByteSpace, ByteTab)
         SkipChars(raw, pointer, ByteEqual)
@@ -520,6 +523,7 @@ Public Module TomlLexical
             End If
         End If
 
+        Dim tknType = TomlToken.TokenTypeEnum.NumberLiteral
         Dim prev As Byte = 0
         Dim dotCount As Integer = 0
         Do While Not pointer.IsEnd
@@ -539,6 +543,7 @@ Public Module TomlLexical
                         If dotCount > 0 Then
                             Throw New TomlSyntaxException($"小数点は1つまでです:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
                         End If
+                        tknType = TomlToken.TokenTypeEnum.RealLiteral
                         pointer.Skip(1)
                     Case ByteUnderBar
                         If (prev < ByteCh0 OrElse prev > ByteCh9) OrElse
@@ -547,7 +552,7 @@ Public Module TomlLexical
                         End If
                         pointer.Skip(1)
                     Case ByteSpace, ByteTab, ByteCR, ByteLF, ByteComma, ByteRBacket, ByteRBrace
-                        Return New TomlToken(TomlToken.TokenTypeEnum.NumberLiteral, raw.GetRange(start, pointer.Index - 1))
+                        Return New TomlToken(tknType, raw.GetRange(start, pointer.Index - 1))
                     Case ByteHyphen
                         Return GetDateTime(raw, pointer, start)
                     Case ByteColon
@@ -560,7 +565,7 @@ Public Module TomlLexical
                 Throw New TomlSyntaxException($"数値に全角文字は使用できません:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
             End If
         Loop
-        Return New TomlToken(TomlToken.TokenTypeEnum.NumberLiteral, raw.GetRange(start, pointer.Index - 1))
+        Return New TomlToken(tknType, raw.GetRange(start, pointer.Index - 1))
     End Function
 
     Private Function GetDateTime(raw As RawSource, pointer As RawSource.Pointer, start As Integer) As TomlToken
@@ -626,13 +631,13 @@ Public Module TomlLexical
                         Case ByteCh0 To ByteCh9
                             pointer.Skip(1)
                         Case Else
-                            Return New TomlToken(TomlToken.TokenTypeEnum.NumberLiteral, raw.GetRange(start, pointer.Index - 1))
+                            Return New TomlToken(TomlToken.TokenTypeEnum.TimeLiteral, raw.GetRange(start, pointer.Index - 1))
                     End Select
                 Else
                     Throw New TomlSyntaxException($"時間の解析に失敗しました:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
                 End If
             Loop
-            Return New TomlToken(TomlToken.TokenTypeEnum.NumberLiteral, raw.GetRange(start, pointer.Index - 1))
+            Return New TomlToken(TomlToken.TokenTypeEnum.TimeLiteral, raw.GetRange(start, pointer.Index - 1))
         Else
             Throw New TomlSyntaxException($"時間の解析に失敗しました:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
         End If
@@ -652,7 +657,7 @@ Public Module TomlLexical
                     Case ByteCh0 To ByteCh9
                         pointer.Skip(1)
                     Case ByteSpace, ByteTab, ByteCR, ByteLF, ByteComma, ByteRBacket, ByteRBrace
-                        Return New TomlToken(TomlToken.TokenTypeEnum.NumberLiteral, raw.GetRange(start, pointer.Index - 1))
+                        Return New TomlToken(TomlToken.TokenTypeEnum.RealExpLiteral, raw.GetRange(start, pointer.Index - 1))
                     Case Else
                         Throw New TomlSyntaxException($"数値の解析に失敗しました:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
                 End Select
@@ -661,7 +666,7 @@ Public Module TomlLexical
             End If
             isFirst = False
         Loop
-        Return New TomlToken(TomlToken.TokenTypeEnum.KeyString, raw.GetRange(start, pointer.Index - 1))
+        Return New TomlToken(TomlToken.TokenTypeEnum.RealExpLiteral, raw.GetRange(start, pointer.Index - 1))
     End Function
 
     Private Function GetHexadecimal(raw As RawSource, pointer As RawSource.Pointer, start As Integer, limit As Integer, checker As Func(Of Byte, Boolean)) As TomlToken
@@ -685,7 +690,7 @@ Public Module TomlLexical
                     pointer.Skip(1)
                 ElseIf c(0) = ByteSpace OrElse c(0) = ByteTab OrElse c(0) = ByteCR OrElse c(0) = ByteLF OrElse
                        c(0) = ByteComma OrElse c(0) = ByteRBacket OrElse c(0) = ByteRBrace Then
-                    Return New TomlToken(TomlToken.TokenTypeEnum.NumberLiteral, raw.GetRange(start, pointer.Index - 1))
+                    Return New TomlToken(TomlToken.TokenTypeEnum.NumberHexLiteral, raw.GetRange(start, pointer.Index - 1))
                 Else
                     Throw New TomlSyntaxException($"数値の解析に失敗しました:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
                 End If
@@ -694,7 +699,7 @@ Public Module TomlLexical
                 Throw New TomlSyntaxException($"数値に全角文字は使用できません:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
             End If
         Loop
-        Return New TomlToken(TomlToken.TokenTypeEnum.NumberLiteral, raw.GetRange(start, pointer.Index - 1))
+        Return New TomlToken(TomlToken.TokenTypeEnum.NumberHexLiteral, raw.GetRange(start, pointer.Index - 1))
     End Function
 
     Private Function GetArray(raw As RawSource, pointer As RawSource.Pointer) As TomlToken
@@ -748,7 +753,7 @@ Public Module TomlLexical
                         Case ByteRBrace
                             If items.Count > 0 AndAlso needSplit Then
                                 pointer.Skip(1)
-                                Return New TomlHasSubToken(TomlToken.TokenTypeEnum.Array, raw.GetRange(start, pointer.Index - 1), items.ToArray())
+                                Return New TomlHasSubToken(TomlToken.TokenTypeEnum.Inline, raw.GetRange(start, pointer.Index - 1), items.ToArray())
                             Else
                                 Throw New TomlSyntaxException($"インラインテーブルの要素がありません:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
                             End If

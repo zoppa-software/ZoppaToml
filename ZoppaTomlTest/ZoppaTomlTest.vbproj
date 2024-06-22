@@ -19,4 +19,9 @@
     <ProjectReference Include="..\ZoppaToml\ZoppaToml.vbproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="valid\" />
+    <Folder Include="invalid\" />
+  </ItemGroup>
+
 </Project>

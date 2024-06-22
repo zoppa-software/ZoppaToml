@@ -27,6 +27,11 @@ Public NotInheritable Class RawSource
         Me.Raw = Text.Encoding.UTF8.GetBytes(src)
     End Sub
 
+    ''' <summary>新しいインスタンスを生成します。</summary>
+    ''' <param name="bytes">生のデータ。</param>
+    Public Sub New(bytes As Byte())
+        Me.Raw = bytes
+    End Sub
 
     Public Function GetPointer() As Pointer
         Return New Pointer(Me)

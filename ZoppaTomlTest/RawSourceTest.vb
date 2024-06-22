@@ -18,17 +18,27 @@ Public Class RawSourceTest
 
     <Fact>
     Sub Case02()
-        Dim raw As New RawSource(
+        Dim query =
 "# この行は全てコメントです。
 key = ""value""  # 行末までコメントです。
 another = ""# これはコメントではありません"""
-)
+        Dim raw As New RawSource(query)
 
         Dim ans = raw.Lexical()
         Assert.Equal(7, ans.Count)
         Assert.Equal("# この行は全てコメントです。", ans(0).ToString())
         Assert.Equal("key = ""value""", ans(2).ToString())
         Assert.Equal("another = ""# これはコメントではありません""", ans(6).ToString())
+
+        Dim doc = TomlDocument.Load(query)
+        Assert.Equal("value", doc("key").GetValue(Of String)())
+        Assert.Equal("# これはコメントではありません", doc("another").GetValue(Of String)())
+
+        Dim raw2 As New RawSource("key = # 無効")
+        Assert.Throws(Of TomlSyntaxException)(Sub() raw2.Lexical())
+
+        Dim raw3 As New RawSource("first = ""Tom"" last = ""Preston-Werner"" # 無効")
+        Assert.Throws(Of TomlSyntaxException)(Sub() raw3.Lexical())
     End Sub
 
     <Fact>
@@ -76,16 +86,20 @@ bare-key = ""value""
         Assert.Equal("""ʎǝʞ"" = ""value""", ans(4).ToString())
         Assert.Equal("'key2' = ""value""", ans(6).ToString())
         Assert.Equal("'quoted ""value""' = ""value""", ans(8).ToString())
+
+        Dim raw2 As New RawSource("= ""no key name""")
+        Assert.Throws(Of TomlSyntaxException)(Sub() raw2.Lexical())
     End Sub
 
     <Fact>
     Sub Case06()
-        Dim raw As New RawSource(
+        Dim query = 
 "name = ""Orange""
 physical.color = ""orange""
 physical.shape = ""round""
 site.""google.com"" = true"
-)
+
+        Dim raw As New RawSource(query)
 
         Dim ans = raw.Lexical()
         Assert.Equal(7, ans.Count)
@@ -93,31 +107,47 @@ site.""google.com"" = true"
         Assert.Equal("physical.color = ""orange""", ans(2).ToString())
         Assert.Equal("physical.shape = ""round""", ans(4).ToString())
         Assert.Equal("site.""google.com"" = true", ans(6).ToString())
+
+        Dim doc = TomlDocument.Load(query)
+        Assert.Equal("Orange", doc("name").GetValue(Of String)())
+        Assert.Equal("orange", doc("physical")("color").GetValue(Of String)())
+        Assert.Equal("round", doc("physical")("shape").GetValue(Of String)())
+        Assert.Equal(True, doc("site")("google.com").GetValue(Of Boolean)())
     End Sub
 
     <Fact>
     Sub Case07()
-        Dim raw As New RawSource(
+        Dim query =
 "fruit.name = ""banana""       # これがベストプラクティスです
 fruit. color = ""yellow""     # fruit.color と同じです
 fruit . flavor = ""banana""   # fruit.flavor と同じです
-")
+"
+        Dim raw As New RawSource(query)
 
         Dim ans = raw.Lexical()
         Assert.Equal(12, ans.Count)
         Assert.Equal("fruit.name = ""banana""", ans(0).ToString())
         Assert.Equal("fruit. color = ""yellow""", ans(4).ToString())
         Assert.Equal("fruit . flavor = ""banana""", ans(8).ToString())
+
+        Dim doc = TomlDocument.Load(query)
+        Assert.Equal("banana", doc("fruit")("name").GetValue(Of String)())
+        Assert.Equal("yellow", doc("fruit")("color").GetValue(Of String)())
+        Assert.Equal("banana", doc("fruit")("flavor").GetValue(Of String)())
     End Sub
 
     <Fact>
     Sub Case08()
-        Dim raw As New RawSource(
-"str = ""I'm a string. \""You can quote me\"". Name\tJos\u00E9\nLocation\tSF.""")
+        Dim query = "str = ""I'm a string. \""You can quote me\"". Name\tJos\u00E9\r\nLocation\tSF."""
+        Dim raw As New RawSource(query)
 
         Dim ans = raw.Lexical()
         Assert.Equal(1, ans.Count)
-        Assert.Equal("str = ""I'm a string. \""You can quote me\"". Name\tJos\u00E9\nLocation\tSF.""", ans(0).ToString())
+        Assert.Equal("str = ""I'm a string. \""You can quote me\"". Name\tJos\u00E9\r\nLocation\tSF.""", ans(0).ToString())
+
+        Dim doc = TomlDocument.Load(query)
+        Assert.Equal("I'm a string. ""You can quote me"". Name	José
+Location	SF.", doc("str").GetValue(Of String)())
     End Sub
 
     <Fact>

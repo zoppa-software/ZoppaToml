@@ -43,6 +43,15 @@ Public Class TomlToken
         ''' <summary>数値。</summary>
         NumberLiteral
 
+        ''' <summary>数値（2,8,16進数）</summary>
+        NumberHexLiteral
+
+        ''' <summary>数値（実数）</summary>
+        RealLiteral
+
+        ''' <summary>数値（実数、指数表現）</summary>
+        RealExpLiteral
+
         ''' <summary>inf。</summary>
         InfLiteral
 
@@ -51,6 +60,9 @@ Public Class TomlToken
 
         ''' <summary>配列。</summary>
         Array
+
+        ''' <summary>インラインテーブル。</summary>
+        Inline
 
         ''' <summary>日付。</summary>
         DateLiteral
@@ -73,6 +85,14 @@ Public Class TomlToken
     Public ReadOnly Property TokenType As TokenTypeEnum
         Get
             Return Me.mType
+        End Get
+    End Property
+
+    ''' <summary>生値参照を取得します。</summary>
+    ''' <returns>生値。</returns>
+    Public ReadOnly Property Range As RawSource.Range
+        Get
+            Return Me.mRange
         End Get
     End Property
 
