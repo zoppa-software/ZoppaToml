@@ -52,6 +52,12 @@ Public Class TomlToken
         ''' <summary>配列。</summary>
         Array
 
+        ''' <summary>日付。</summary>
+        DateLiteral
+
+        ''' <summary>時間。</summary>
+        TimeLiteral
+
     End Enum
 
     ' トークンの種類

@@ -351,6 +351,42 @@ bool2 = false")
     <Fact>
     Sub Case22()
         Dim raw As New RawSource(
+"odt1 = 1979-05-27T07:32:00Z
+odt2 = 1979-05-27T00:32:00-07:00
+odt3 = 1979-05-27T00:32:00.999999-07:00")
+
+        Dim ans = raw.Lexical()
+        Assert.Equal(5, ans.Count)
+        Assert.Equal("odt1 = 1979-05-27T07:32:00Z", ans(0).ToString())
+        Assert.Equal("odt2 = 1979-05-27T00:32:00-07:00", ans(2).ToString())
+        Assert.Equal("odt3 = 1979-05-27T00:32:00.999999-07:00", ans(4).ToString())
+    End Sub
+
+    <Fact>
+    Sub Case23()
+        Dim raw As New RawSource(
+"odt4 = 1979-05-27 07:32:00Z")
+
+        Dim ans = raw.Lexical()
+        Assert.Equal(1, ans.Count)
+        Assert.Equal("odt4 = 1979-05-27 07:32:00Z", ans(0).ToString())
+    End Sub
+
+    <Fact>
+    Sub Case24()
+        Dim raw As New RawSource(
+"ldt1 = 1979-05-27T07:32:00
+ldt2 = 1979-05-27T00:32:00.999999")
+
+        Dim ans = raw.Lexical()
+        Assert.Equal(3, ans.Count)
+        Assert.Equal("ldt1 = 1979-05-27T07:32:00", ans(0).ToString())
+        Assert.Equal("ldt2 = 1979-05-27T00:32:00.999999", ans(2).ToString())
+    End Sub
+
+    <Fact>
+    Sub Case28()
+        Dim raw As New RawSource(
 "integers = [ 1, 2, 3 ]
 colors = [ ""red"", ""yellow"", ""green"" ]
 nested_arrays_of_ints = [ [ 1, 2 ], [3, 4, 5] ]
@@ -379,7 +415,7 @@ contributors = [
     End Sub
 
     <Fact>
-    Sub Case23()
+    Sub Case29()
         Dim raw As New RawSource(
 "integers2 = [
   1, 2, 3
@@ -402,7 +438,7 @@ integers3 = [
     End Sub
 
     <Fact>
-    Sub Case24()
+    Sub Case30()
         Dim raw As New RawSource(
 "name = { first = ""Tom"", last = ""Preston-Werner"" }
 point = { x = 1, y = 2 }

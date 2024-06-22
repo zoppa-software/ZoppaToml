@@ -548,6 +548,10 @@ Public Module TomlLexical
                         pointer.Skip(1)
                     Case ByteSpace, ByteTab, ByteCR, ByteLF, ByteComma, ByteRBacket, ByteRBrace
                         Return New TomlToken(TomlToken.TokenTypeEnum.NumberLiteral, raw.GetRange(start, pointer.Index - 1))
+                    Case ByteHyphen
+                        Return GetDateTime(raw, pointer, start)
+                    Case ByteColon
+                        Return GetTime(raw, pointer, start)
                     Case Else
                         Throw New TomlSyntaxException($"数値の解析に失敗しました:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
                 End Select
@@ -557,6 +561,81 @@ Public Module TomlLexical
             End If
         Loop
         Return New TomlToken(TomlToken.TokenTypeEnum.NumberLiteral, raw.GetRange(start, pointer.Index - 1))
+    End Function
+
+    Private Function GetDateTime(raw As RawSource, pointer As RawSource.Pointer, start As Integer) As TomlToken
+        Dim tmPtr = raw.GetPointer(start)
+        If tmPtr.Peek(0) >= ByteCh0 AndAlso tmPtr.Peek(0) <= ByteCh9 AndAlso
+           tmPtr.Peek(1) >= ByteCh0 AndAlso tmPtr.Peek(1) <= ByteCh9 AndAlso
+           tmPtr.Peek(2) >= ByteCh0 AndAlso tmPtr.Peek(2) <= ByteCh9 AndAlso
+           tmPtr.Peek(3) >= ByteCh0 AndAlso tmPtr.Peek(3) <= ByteCh9 AndAlso
+           tmPtr.Peek(4) = ByteHyphen AndAlso
+           tmPtr.Peek(5) >= ByteCh0 AndAlso tmPtr.Peek(5) <= ByteCh1 AndAlso
+           tmPtr.Peek(6) >= ByteCh0 AndAlso tmPtr.Peek(6) <= ByteCh9 AndAlso
+           tmPtr.Peek(7) = ByteHyphen AndAlso
+           tmPtr.Peek(8) >= ByteCh0 AndAlso tmPtr.Peek(8) <= ByteCh3 AndAlso
+           tmPtr.Peek(9) >= ByteCh0 AndAlso tmPtr.Peek(9) <= ByteCh9 Then
+            pointer.Skip(6)
+            If pointer.Peek(0) <> ByteUpT AndAlso (pointer.Peek(0) <> ByteSpace OrElse pointer.Peek(1) < ByteCh0 OrElse pointer.Peek(1) > ByteCh9) Then
+                Return New TomlToken(TomlToken.TokenTypeEnum.DateLiteral, raw.GetRange(start, pointer.Index - 1))
+            End If
+
+            pointer.Skip(1)
+            Dim timePtr = pointer.Index
+            pointer.Skip(2)
+            GetTime(raw, pointer, timePtr)
+            If pointer.Peek(0) = ByteUpZ Then
+                pointer.Skip(1)
+                Return New TomlToken(TomlToken.TokenTypeEnum.DateLiteral, raw.GetRange(start, pointer.Index - 1))
+            ElseIf pointer.Peek(0) <> BytePlus AndAlso pointer.Peek(0) <> ByteMinus Then
+                Return New TomlToken(TomlToken.TokenTypeEnum.DateLiteral, raw.GetRange(start, pointer.Index - 1))
+            End If
+
+            pointer.Skip(1)
+            If pointer.Peek(0) >= ByteCh0 AndAlso pointer.Peek(0) <= ByteCh9 AndAlso
+               pointer.Peek(1) >= ByteCh0 AndAlso pointer.Peek(1) <= ByteCh9 AndAlso
+               pointer.Peek(2) = ByteColon AndAlso
+               pointer.Peek(3) >= ByteCh0 AndAlso pointer.Peek(3) <= ByteCh9 AndAlso
+               pointer.Peek(4) >= ByteCh0 AndAlso pointer.Peek(4) <= ByteCh9 Then
+                pointer.Skip(5)
+                Return New TomlToken(TomlToken.TokenTypeEnum.DateLiteral, raw.GetRange(start, pointer.Index - 1))
+            End If
+        End If
+        Throw New TomlSyntaxException($"日付の解析に失敗しました:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
+    End Function
+
+    Private Function GetTime(raw As RawSource, pointer As RawSource.Pointer, start As Integer) As TomlToken
+        Dim tmPtr = raw.GetPointer(start)
+        If tmPtr.Peek(0) >= ByteCh0 AndAlso tmPtr.Peek(0) <= ByteCh9 AndAlso
+           tmPtr.Peek(1) >= ByteCh0 AndAlso tmPtr.Peek(1) <= ByteCh9 AndAlso
+           tmPtr.Peek(2) = ByteColon AndAlso
+           tmPtr.Peek(3) >= ByteCh0 AndAlso tmPtr.Peek(3) <= ByteCh9 AndAlso
+           tmPtr.Peek(4) >= ByteCh0 AndAlso tmPtr.Peek(4) <= ByteCh9 AndAlso
+           tmPtr.Peek(5) = ByteColon AndAlso
+           tmPtr.Peek(6) >= ByteCh0 AndAlso tmPtr.Peek(6) <= ByteCh9 AndAlso
+           tmPtr.Peek(7) >= ByteCh0 AndAlso tmPtr.Peek(7) <= ByteCh9 Then
+            pointer.Skip(6)
+            If pointer.Peek(0) <> ByteDot Then
+                Return New TomlToken(TomlToken.TokenTypeEnum.TimeLiteral, raw.GetRange(start, pointer.Index - 1))
+            End If
+            pointer.Skip(1)
+            Do While Not pointer.IsEnd
+                Dim c = pointer.Current
+                If c.Length = 1 Then
+                    Select Case c(0)
+                        Case ByteCh0 To ByteCh9
+                            pointer.Skip(1)
+                        Case Else
+                            Return New TomlToken(TomlToken.TokenTypeEnum.NumberLiteral, raw.GetRange(start, pointer.Index - 1))
+                    End Select
+                Else
+                    Throw New TomlSyntaxException($"時間の解析に失敗しました:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
+                End If
+            Loop
+            Return New TomlToken(TomlToken.TokenTypeEnum.NumberLiteral, raw.GetRange(start, pointer.Index - 1))
+        Else
+            Throw New TomlSyntaxException($"時間の解析に失敗しました:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
+        End If
     End Function
 
     Private Function GetExponents(raw As RawSource, pointer As RawSource.Pointer, start As Integer) As TomlToken

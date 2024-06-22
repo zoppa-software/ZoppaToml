@@ -12,11 +12,15 @@ Module TomlDefineModule
 
     Public Const ByteCh1 As Byte = AscW("1"c)
 
+    Public Const ByteCh3 As Byte = AscW("3"c)
+
     Public Const ByteCh7 As Byte = AscW("7"c)
 
     Public Const ByteCh9 As Byte = AscW("9"c)
 
     Public Const ByteComma As Byte = AscW(","c)
+
+    Public Const ByteColon As Byte = AscW(":"c)
 
     Public Const ByteDot As Byte = AscW("."c)
 
@@ -77,6 +81,8 @@ Module TomlDefineModule
     Public Const ByteUpE As Byte = AscW("E"c)
 
     Public Const ByteUpF As Byte = AscW("F"c)
+
+    Public Const ByteUpT As Byte = AscW("T"c)
 
     Public Const ByteUpZ As Byte = AscW("Z"c)
 
