@@ -517,7 +517,9 @@ Public Module TomlLexical
                                     Throw New TomlSyntaxException($"符号付きの2進数は許可されません:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
                                 End If
                             Case ByteCh0 To ByteCh9, ByteUnderBar
-                                Throw New TomlSyntaxException($"先行ゼロは許可されません:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
+                                If pointer.Peek(2) <> ByteColon Then
+                                    Throw New TomlSyntaxException($"先行ゼロは許可されません:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
+                                End If
                         End Select
                 End Select
             End If

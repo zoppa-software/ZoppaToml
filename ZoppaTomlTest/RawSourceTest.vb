@@ -152,16 +152,38 @@ Location	SF.", doc("str").GetValue(Of String)())
 
     <Fact>
     Sub Case09()
-        Dim raw As New RawSource(
-"str1 = """"""
+        Dim query = "str1 = """"""
 Roses are red
-Violets are blue""""""")
+Violets are blue"""""""
+        Dim raw As New RawSource(query)
 
         Dim ans = raw.Lexical()
         Assert.Equal(1, ans.Count)
         Assert.Equal("str1 = """"""
 Roses are red
 Violets are blue""""""", ans(0).ToString())
+
+        Dim doc = TomlDocument.Load(query)
+        Assert.Equal("Roses are red
+Violets are blue", doc("str1").GetValue(Of String)())
+
+        Dim query2 = "
+str2 = """"""The quick brown \
+
+
+  fox jumps over \
+    the lazy dog."""""""
+        Dim doc2 = TomlDocument.Load(query2)
+        Assert.Equal("The quick brown fox jumps over the lazy dog.", doc2("str2").GetValue(Of String)())
+
+        Dim query3 = "
+str3 = """"""\
+       The quick brown \
+       fox jumps over \
+       the lazy dog.\
+       """""""
+        Dim doc3 = TomlDocument.Load(query3)
+        Assert.Equal("The quick brown fox jumps over the lazy dog.", doc3("str3").GetValue(Of String)())
     End Sub
 
     <Fact>
@@ -186,12 +208,12 @@ str7 = """"""""This,"" she said, ""is just a pointless statement.""""""""")
 
     <Fact>
     Sub Case11()
-        Dim raw As New RawSource(
-"# 表示されている文字列、そのものが得られます。
+        Dim query = "# 表示されている文字列、そのものが得られます。
 winpath  = 'C:\Users\nodejs\templates'
 winpath2 = '\\ServerX\admin$\system32\'
 quoted   = 'Tom ""Dubs"" Preston-Werner'
-regex    = '<\i\c*\s*>'")
+regex    = '<\i\c*\s*>'"
+        Dim raw As New RawSource(query)
 
         Dim ans = raw.Lexical()
         Assert.Equal(9, ans.Count)
@@ -200,18 +222,25 @@ regex    = '<\i\c*\s*>'")
         Assert.Equal("winpath2 = '\\ServerX\admin$\system32\'", ans(4).ToString())
         Assert.Equal("quoted   = 'Tom ""Dubs"" Preston-Werner'", ans(6).ToString())
         Assert.Equal("regex    = '<\i\c*\s*>'", ans(8).ToString())
+
+        Dim doc = TomlDocument.Load(query)
+        Assert.Equal("C:\Users\nodejs\templates", doc("winpath").GetValue(Of String)())
+        Assert.Equal("\\ServerX\admin$\system32\", doc("winpath2").GetValue(Of String)())
+        Assert.Equal("Tom ""Dubs"" Preston-Werner", doc("quoted").GetValue(Of String)())
+        Assert.Equal("<\i\c*\s*>", doc("regex").GetValue(Of String)())
     End Sub
 
     <Fact>
     Sub Case12()
-        Dim raw As New RawSource(
+        Dim query =
 "regex2 = '''I [dw]on't need \d{2} apples'''
 lines  = '''
 生の文字列では、
 最初の改行は取り除かれます。
    その他の空白は、
    保持されます。
-'''")
+'''"
+        Dim raw As New RawSource(query)
 
         Dim ans = raw.Lexical()
         Assert.Equal(3, ans.Count)
@@ -222,6 +251,14 @@ lines  = '''
    その他の空白は、
    保持されます。
 '''", ans(2).ToString())
+
+        Dim doc = TomlDocument.Load(query)
+        Assert.Equal("I [dw]on't need \d{2} apples", doc("regex2").GetValue(Of String)())
+        Assert.Equal("生の文字列では、
+最初の改行は取り除かれます。
+   その他の空白は、
+   保持されます。
+", doc("lines").GetValue(Of String)())
     End Sub
 
     <Fact>
@@ -251,11 +288,11 @@ str = ''''That,' she said, 'is still pointless.''''")
 
     <Fact>
     Sub Case15()
-        Dim raw As New RawSource(
-"int1 = +99
+        Dim query = "int1 = +99
 int2 = 42
 int3 = 0
-int4 = -17")
+int4 = -17"
+        Dim raw As New RawSource(query)
 
         Dim ans = raw.Lexical()
         Assert.Equal(7, ans.Count)
@@ -263,15 +300,22 @@ int4 = -17")
         Assert.Equal("int2 = 42", ans(2).ToString())
         Assert.Equal("int3 = 0", ans(4).ToString())
         Assert.Equal("int4 = -17", ans(6).ToString())
+
+        Dim doc = TomlDocument.Load(query)
+        Assert.Equal(99, doc("int1").GetValue(Of Integer)())
+        Assert.Equal(42, doc("int2").GetValue(Of Integer)())
+        Assert.Equal(0, doc("int3").GetValue(Of Integer)())
+        Assert.Equal(-17, doc("int4").GetValue(Of Integer)())
     End Sub
 
     <Fact>
     Sub Case16()
-        Dim raw As New RawSource(
+        Dim query =
 "int5 = 1_000
 int6 = 5_349_221
 int7 = 53_49_221  # インド式命数法
-int8 = 1_2_3_4_5  # 有効ですが推奨されません")
+int8 = 1_2_3_4_5  # 有効ですが推奨されません"
+        Dim raw As New RawSource(query)
 
         Dim ans = raw.Lexical()
         Assert.Equal(11, ans.Count)
@@ -279,12 +323,17 @@ int8 = 1_2_3_4_5  # 有効ですが推奨されません")
         Assert.Equal("int6 = 5_349_221", ans(2).ToString())
         Assert.Equal("int7 = 53_49_221", ans(4).ToString())
         Assert.Equal("int8 = 1_2_3_4_5", ans(8).ToString())
+
+        Dim doc = TomlDocument.Load(query)
+        Assert.Equal(1000, doc("int5").GetValue(Of Integer)())
+        Assert.Equal(5349221, doc("int6").GetValue(Of Integer)())
+        Assert.Equal(5349221, doc("int7").GetValue(Of Integer)())
+        Assert.Equal(12345, doc("int8").GetValue(Of Integer)())
     End Sub
 
     <Fact>
     Sub Case17()
-        Dim raw As New RawSource(
-"# 接頭辞 `0x` が付いた 16 進数
+        Dim query = "# 接頭辞 `0x` が付いた 16 進数
 hex1 = 0xDEADBEEF
 hex2 = 0xdeadbeef
 hex3 = 0xdead_beef
@@ -294,7 +343,8 @@ oct1 = 0o01234567
 oct2 = 0o755 # Unix ファイルのパーミッションに便利
 
 # 接頭辞 `0b` が付いた 2 進数
-bin1 = 0b11010110")
+bin1 = 0b11010110"
+        Dim raw As New RawSource(query)
 
         Dim ans = raw.Lexical()
         Assert.Equal(21, ans.Count)
@@ -304,11 +354,19 @@ bin1 = 0b11010110")
         Assert.Equal("oct1 = 0o01234567", ans(11).ToString())
         Assert.Equal("oct2 = 0o755", ans(13).ToString())
         Assert.Equal("bin1 = 0b11010110", ans(20).ToString())
+
+        Dim doc = TomlDocument.Load(query)
+        Assert.Equal(3735928559, doc("hex1").GetValue(Of Long)())
+        Assert.Equal(3735928559, doc("hex2").GetValue(Of Long)())
+        Assert.Equal(3735928559, doc("hex3").GetValue(Of Long)())
+        Assert.Equal(342391, doc("oct1").GetValue(Of Long)())
+        Assert.Equal(493, doc("oct2").GetValue(Of Long)())
+        Assert.Equal(214, doc("bin1").GetValue(Of Long)())
     End Sub
 
     <Fact>
     Sub Case18()
-        Dim raw As New RawSource(
+        Dim query =
 "# 小数部
 flt1 = +1.0
 flt2 = 3.1415
@@ -320,7 +378,8 @@ flt5 = 1e06
 flt6 = -2E-2
 
 # 少数部と指数部の両方
-flt7 = 6.626e-34")
+flt7 = 6.626e-34"
+        Dim raw As New RawSource(query)
 
         Dim ans = raw.Lexical()
         Assert.Equal(21, ans.Count)
@@ -331,6 +390,15 @@ flt7 = 6.626e-34")
         Assert.Equal("flt5 = 1e06", ans(13).ToString())
         Assert.Equal("flt6 = -2E-2", ans(15).ToString())
         Assert.Equal("flt7 = 6.626e-34", ans(20).ToString())
+
+        Dim doc = TomlDocument.Load(query)
+        Assert.Equal(1.0, doc("flt1").GetValue(Of Double)())
+        Assert.Equal(3.1415, doc("flt2").GetValue(Of Double)())
+        Assert.Equal(-0.01, doc("flt3").GetValue(Of Double)())
+        Assert.Equal(5.0E+22, doc("flt4").GetValue(Of Double)())
+        Assert.Equal(1000000.0, doc("flt5").GetValue(Of Double)())
+        Assert.Equal(-0.02, doc("flt6").GetValue(Of Double)())
+        Assert.Equal(6.626E-34, doc("flt7").GetValue(Of Double)())
     End Sub
 
     <Fact>
@@ -345,7 +413,7 @@ flt7 = 6.626e-34")
 
     <Fact>
     Sub Case20()
-        Dim raw As New RawSource(
+        Dim query =
 "# 無限大
 sf1 = inf  # 正の無限大
 sf2 = +inf # 正の無限大
@@ -354,7 +422,8 @@ sf3 = -inf # 負の無限大
 # 非数 (NaN)
 sf4 = nan  # 実際の sNaN/qNaN エンコーディングは実装に依存します
 sf5 = +nan # `nan` と等価
-sf6 = -nan # 有効で、実際のエンコーディングは実装に依存します")
+sf6 = -nan # 有効で、実際のエンコーディングは実装に依存します"
+        Dim raw As New RawSource(query)
 
         Dim ans = raw.Lexical()
         Assert.Equal(28, ans.Count)
@@ -364,46 +433,85 @@ sf6 = -nan # 有効で、実際のエンコーディングは実装に依存し�
         Assert.Equal("sf4 = nan", ans(17).ToString())
         Assert.Equal("sf5 = +nan", ans(21).ToString())
         Assert.Equal("sf6 = -nan", ans(25).ToString())
+
+        Dim doc = TomlDocument.Load(query)
+        Assert.Equal(Double.PositiveInfinity, doc("sf1").GetValue(Of Double)())
+        Assert.Equal(Double.PositiveInfinity, doc("sf2").GetValue(Of Double)())
+        Assert.Equal(Double.NegativeInfinity, doc("sf3").GetValue(Of Double)())
+        Assert.Equal(Double.NaN, doc("sf4").GetValue(Of Double)())
+        Assert.Equal(Double.NaN, doc("sf5").GetValue(Of Double)())
+        Assert.Equal(-Double.NaN, doc("sf6").GetValue(Of Double)())
     End Sub
 
     <Fact>
     Sub Case21()
-        Dim raw As New RawSource(
+        Dim query =
 "bool1 = true
-bool2 = false")
+bool2 = false"
+        Dim raw As New RawSource(query)
 
         Dim ans = raw.Lexical()
         Assert.Equal(3, ans.Count)
         Assert.Equal("bool1 = true", ans(0).ToString())
         Assert.Equal("bool2 = false", ans(2).ToString())
+
+        Dim doc = TomlDocument.Load(query)
+        Assert.Equal(True, doc("bool1").GetValue(Of Boolean)())
+        Assert.Equal(False, doc("bool2").GetValue(Of Boolean)())
     End Sub
 
     <Fact>
     Sub Case22()
-        Dim raw As New RawSource(
+        Dim query =
 "odt1 = 1979-05-27T07:32:00Z
 odt2 = 1979-05-27T00:32:00-07:00
-odt3 = 1979-05-27T00:32:00.999999-07:00")
+odt3 = 1979-05-27T00:32:00.999999-07:00"
+        Dim raw As New RawSource(query)
 
         Dim ans = raw.Lexical()
         Assert.Equal(5, ans.Count)
         Assert.Equal("odt1 = 1979-05-27T07:32:00Z", ans(0).ToString())
         Assert.Equal("odt2 = 1979-05-27T00:32:00-07:00", ans(2).ToString())
         Assert.Equal("odt3 = 1979-05-27T00:32:00.999999-07:00", ans(4).ToString())
+
+        Dim doc = TomlDocument.Load(query)
+        Assert.Equal(New DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero), doc("odt1").GetValue(Of DateTimeOffset)())
+        Assert.Equal(New DateTimeOffset(1979, 5, 27, 0, 32, 0, New TimeSpan(-7, 0, 0)), doc("odt2").GetValue(Of DateTimeOffset)())
+        Assert.Equal(New DateTimeOffset(1979, 5, 27, 0, 32, 0, 999, New TimeSpan(-7, 0, 0)), doc("odt3").GetValue(Of DateTimeOffset)())
     End Sub
 
     <Fact>
     Sub Case23()
-        Dim raw As New RawSource(
-"odt4 = 1979-05-27 07:32:00Z")
+        Dim query = "odt4 = 1979-05-27 07:32:00Z"
+        Dim raw As New RawSource(query)
 
         Dim ans = raw.Lexical()
         Assert.Equal(1, ans.Count)
         Assert.Equal("odt4 = 1979-05-27 07:32:00Z", ans(0).ToString())
+
+        Dim doc = TomlDocument.Load(query)
+        Assert.Equal(New DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero), doc("odt4").GetValue(Of DateTimeOffset)())
     End Sub
 
     <Fact>
     Sub Case24()
+        Dim query =
+"lt1 = 07:32:00
+lt2 = 00:32:00.999999"
+        Dim raw As New RawSource(query)
+
+        Dim ans = raw.Lexical()
+        Assert.Equal(3, ans.Count)
+        Assert.Equal("lt1 = 07:32:00", ans(0).ToString())
+        Assert.Equal("lt2 = 00:32:00.999999", ans(2).ToString())
+
+        Dim doc = TomlDocument.Load(query)
+        Assert.Equal(New TimeSpan(7, 32, 0), doc("lt1").GetValue(Of TimeSpan)())
+        Assert.Equal(New TimeSpan(0, 0, 32, 0, 999), doc("lt2").GetValue(Of TimeSpan)())
+    End Sub
+
+    <Fact>
+    Sub Case25()
         Dim raw As New RawSource(
 "ldt1 = 1979-05-27T07:32:00
 ldt2 = 1979-05-27T00:32:00.999999")
