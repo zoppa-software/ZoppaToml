@@ -80,11 +80,17 @@ Module TomlDefineModule
 
     Public Const ByteUpA As Byte = AscW("A"c)
 
+    Public Const ByteUpB As Byte = AscW("B"c)
+
     Public Const ByteUpE As Byte = AscW("E"c)
 
     Public Const ByteUpF As Byte = AscW("F"c)
 
+    Public Const ByteUpO As Byte = AscW("O"c)
+
     Public Const ByteUpT As Byte = AscW("T"c)
+
+    Public Const ByteUpX As Byte = AscW("X"c)
 
     Public Const ByteUpZ As Byte = AscW("Z"c)
 

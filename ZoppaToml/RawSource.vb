@@ -169,7 +169,7 @@ Public NotInheritable Class RawSource
                 If index >= 0 AndAlso index < Me.Length Then
                     Return Me.mSource.Raw(Me.Start + index)
                 Else
-                    Throw New IndexOutOfRangeException()
+                    Return 0
                 End If
             End Get
         End Property
@@ -186,92 +186,92 @@ Public NotInheritable Class RawSource
 
     End Structure
 
-    Public Structure ByteStructure
+    'Public Structure ByteStructure
 
-        Public ReadOnly data0 As Byte
+    '    Public ReadOnly data0 As Byte
 
-        Public ReadOnly data1 As Byte
+    '    Public ReadOnly data1 As Byte
 
-        Public ReadOnly data2 As Byte
+    '    Public ReadOnly data2 As Byte
 
-        Public ReadOnly data3 As Byte
+    '    Public ReadOnly data3 As Byte
 
-        Public ReadOnly data4 As Byte
+    '    Public ReadOnly data4 As Byte
 
-        Public ReadOnly data5 As Byte
+    '    Public ReadOnly data5 As Byte
 
-        Public ReadOnly Length As Integer
+    '    Public ReadOnly Length As Integer
 
-        Default Public ReadOnly Property Item(index As Integer) As Byte
-            Get
-                Select Case index
-                    Case 0
-                        Return Me.data0
-                    Case 1
-                        Return Me.data1
-                    Case 2
-                        Return Me.data2
-                    Case 3
-                        Return Me.data3
-                    Case 4
-                        Return Me.data4
-                    Case 5
-                        Return Me.data5
-                    Case Else
-                        Throw New IndexOutOfRangeException()
-                End Select
-            End Get
-        End Property
+    '    Default Public ReadOnly Property Item(index As Integer) As Byte
+    '        Get
+    '            Select Case index
+    '                Case 0
+    '                    Return Me.data0
+    '                Case 1
+    '                    Return Me.data1
+    '                Case 2
+    '                    Return Me.data2
+    '                Case 3
+    '                    Return Me.data3
+    '                Case 4
+    '                    Return Me.data4
+    '                Case 5
+    '                    Return Me.data5
+    '                Case Else
+    '                    Throw New IndexOutOfRangeException()
+    '            End Select
+    '        End Get
+    '    End Property
 
-        Public Sub New(data As Byte(), start As Integer, length As Integer)
-            Select Case length
-                Case 1
-                    Me.data0 = data(start + 0)
-                    Me.data1 = 0
-                    Me.data2 = 0
-                    Me.data3 = 0
-                    Me.data4 = 0
-                    Me.data5 = 0
-                Case 2
-                    Me.data0 = data(start + 0)
-                    Me.data1 = data(start + 1)
-                    Me.data2 = 0
-                    Me.data3 = 0
-                    Me.data4 = 0
-                    Me.data5 = 0
-                Case 3
-                    Me.data0 = data(start + 0)
-                    Me.data1 = data(start + 1)
-                    Me.data2 = data(start + 2)
-                    Me.data3 = 0
-                    Me.data4 = 0
-                    Me.data5 = 0
-                Case 4
-                    Me.data0 = data(start + 0)
-                    Me.data1 = data(start + 1)
-                    Me.data2 = data(start + 2)
-                    Me.data3 = data(start + 3)
-                    Me.data4 = 0
-                    Me.data5 = 0
-                Case 5
-                    Me.data0 = data(start + 0)
-                    Me.data1 = data(start + 1)
-                    Me.data2 = data(start + 2)
-                    Me.data3 = data(start + 3)
-                    Me.data4 = data(start + 4)
-                    Me.data5 = 0
-                Case 6
-                    Me.data0 = data(start + 0)
-                    Me.data1 = data(start + 1)
-                    Me.data2 = data(start + 2)
-                    Me.data3 = data(start + 3)
-                    Me.data4 = data(start + 4)
-                    Me.data5 = data(start + 5)
-            End Select
-            Me.Length = length
-        End Sub
+    '    Public Sub New(data As Byte(), start As Integer, length As Integer)
+    '        Select Case length
+    '            Case 1
+    '                Me.data0 = data(start + 0)
+    '                Me.data1 = 0
+    '                Me.data2 = 0
+    '                Me.data3 = 0
+    '                Me.data4 = 0
+    '                Me.data5 = 0
+    '            Case 2
+    '                Me.data0 = data(start + 0)
+    '                Me.data1 = data(start + 1)
+    '                Me.data2 = 0
+    '                Me.data3 = 0
+    '                Me.data4 = 0
+    '                Me.data5 = 0
+    '            Case 3
+    '                Me.data0 = data(start + 0)
+    '                Me.data1 = data(start + 1)
+    '                Me.data2 = data(start + 2)
+    '                Me.data3 = 0
+    '                Me.data4 = 0
+    '                Me.data5 = 0
+    '            Case 4
+    '                Me.data0 = data(start + 0)
+    '                Me.data1 = data(start + 1)
+    '                Me.data2 = data(start + 2)
+    '                Me.data3 = data(start + 3)
+    '                Me.data4 = 0
+    '                Me.data5 = 0
+    '            Case 5
+    '                Me.data0 = data(start + 0)
+    '                Me.data1 = data(start + 1)
+    '                Me.data2 = data(start + 2)
+    '                Me.data3 = data(start + 3)
+    '                Me.data4 = data(start + 4)
+    '                Me.data5 = 0
+    '            Case 6
+    '                Me.data0 = data(start + 0)
+    '                Me.data1 = data(start + 1)
+    '                Me.data2 = data(start + 2)
+    '                Me.data3 = data(start + 3)
+    '                Me.data4 = data(start + 4)
+    '                Me.data5 = data(start + 5)
+    '        End Select
+    '        Me.Length = length
+    '    End Sub
 
-    End Structure
+    'End Structure
 
 #End Region
 

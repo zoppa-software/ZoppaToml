@@ -1,18 +1,42 @@
 ﻿Option Strict On
 Option Explicit On
 
-Imports System.ComponentModel
 Imports System.Runtime.CompilerServices
-Imports System.Runtime.InteropServices.ComTypes
 Imports System.Text
 
+''' <summary>トークンの評価を行うモジュールです。</summary>
 Public Module TomlEvaluation
 
+    ''' <summary>指定したキーでテーブル関連を走査して取得します。</summary>
+    ''' <param name="current">現在位置のテーブル。</param>
+    ''' <param name="keys">走査するテーブル名リスト。</param>
+    ''' <param name="isKeyAndValue">最後の名前を除くならば真。</param>
+    ''' <returns>名前で決定したテーブル。</returns>
     <Extension>
-    Public Function CreateTomlValue(tkn As TomlToken) As ITomlItem
+    Function TraverseTable(current As TomlTable, keys As TomlToken(), Optional isKeyAndValue As Boolean = True) As TomlTable
+        For i As Integer = 0 To keys.Length + If(isKeyAndValue, -2, -1)
+            Dim knm = keys(i).GetKeyString()
+            If current.Children.ContainsKey(knm) Then
+                current = DirectCast(current.Children(knm), TomlTable)
+            Else
+                Dim tbl As New TomlTable(knm)
+                current.Children.Add(knm, tbl)
+                current = tbl
+            End If
+        Next
+        Return current
+    End Function
+
+    ''' <summary>トークンから要素を作成します。</summary>
+    ''' <param name="tkn">トークン。</param>
+    ''' <returns>要素。</returns>
+    <Extension>
+    Public Function CreateTomlValue(tkn As TomlToken) As ITomlElement
         Select Case tkn.TokenType
-            Case TomlToken.TokenTypeEnum.NumberLiteral, TomlToken.TokenTypeEnum.NumberHexLiteral
+            Case TomlToken.TokenTypeEnum.NumberLiteral
                 Return New TomlValue(Of Long)(tkn.Range, tkn.GetLongInteger())
+            Case TomlToken.TokenTypeEnum.NumberHexLiteral
+                Return New TomlValue(Of Long)(tkn.Range, tkn.GetLongIntegerHexadecimal())
             Case TomlToken.TokenTypeEnum.LiteralString
                 Return New TomlValue(Of String)(tkn.Range, tkn.GetString())
             Case TomlToken.TokenTypeEnum.RealLiteral
@@ -33,7 +57,7 @@ Public Module TomlEvaluation
             Case TomlToken.TokenTypeEnum.TimeLiteral
                 Return New TomlValue(Of TimeSpan)(tkn.Range, tkn.GetTime())
             Case TomlToken.TokenTypeEnum.Array
-                Return tkn.GetArray(tkn.Range)
+                Return tkn.GetArray()
             Case TomlToken.TokenTypeEnum.InfLiteral
                 Return New TomlValue(Of Double)(tkn.Range, tkn.GetInfReal())
             Case TomlToken.TokenTypeEnum.NanLiteral
@@ -43,61 +67,24 @@ Public Module TomlEvaluation
         End Select
     End Function
 
-    <Extension>
-    Public Function GetLongInteger(token As TomlToken) As Long
-        Dim raw = token.Raw
-
-        Select Case token.TokenType
-            Case TomlToken.TokenTypeEnum.NumberLiteral
-                Dim ans As Long = 0
-                Dim pt As Integer = 0
-                Dim msign As Boolean = False
-                If raw(0) = BytePlus Then
-                    pt = 1
-                ElseIf raw(0) = ByteMinus Then
-                    pt = 1
-                    msign = True
-                End If
-                For i As Integer = pt To raw.Length - 1
-                    If raw(i) <> ByteUnderBar Then
-                        ans = ans * 10 + (raw(i) - ByteCh0)
-                    End If
-                Next
-                Return If(msign, -ans, ans)
-
-            Case TomlToken.TokenTypeEnum.NumberHexLiteral
-                Dim uans As ULong = 0
-                Select Case raw(1)
-                    Case ByteLowX
-                        For i As Integer = 2 To raw.Length - 1
-                            If raw(i) <> ByteUnderBar Then
-                                uans = CULng((uans << 4) + ConvertHexToByte(raw(i)))
-                            End If
-                        Next
-                        Return BitConverter.ToInt64(BitConverter.GetBytes(uans), 0)
-
-                    Case ByteLowO
-                        For i As Integer = 2 To raw.Length - 1
-                            If raw(i) <> ByteUnderBar Then
-                                uans = CULng((uans << 3) + (raw(i) - ByteCh0))
-                            End If
-                        Next
-                        Return BitConverter.ToInt64(BitConverter.GetBytes(uans), 0)
-
-                    Case ByteLowB
-                        For i As Integer = 2 To raw.Length - 1
-                            If raw(i) <> ByteUnderBar Then
-                                uans = CULng((uans << 1) + (raw(i) - ByteCh0))
-                            End If
-                        Next
-                        Return BitConverter.ToInt64(BitConverter.GetBytes(uans), 0)
-                End Select
-                Return Long.Parse(token.ToString().Substring(2), Globalization.NumberStyles.HexNumber)
-            Case Else
-                Throw New TomlSyntaxException($"整数が取得できませんでした:{token}")
-        End Select
+    ''' <summary>16進数文字を数値に変換します。</summary>
+    ''' <param name="c">文字。</param>
+    ''' <returns>数値。</returns>
+    Private Function ConvertHexToByte(c As Char) As Byte
+        If c >= "0"c AndAlso c <= "9"c Then
+            Return CByte(AscW(c) - AscW("0"c))
+        ElseIf c >= "A"c AndAlso c <= "F"c Then
+            Return CByte(AscW(c) - AscW("A"c) + 10)
+        ElseIf c >= "a"c AndAlso c <= "f"c Then
+            Return CByte(AscW(c) - AscW("a"c) + 10)
+        Else
+            Throw New TomlSyntaxException($"不正な文字です:{c}")
+        End If
     End Function
 
+    ''' <summary>16進数文字（バイト）を数値に変換します。</summary>
+    ''' <param name="c">文字。</param>
+    ''' <returns>数値。</returns>
     Private Function ConvertHexToByte(c As Byte) As Integer
         If c >= ByteCh0 AndAlso c <= ByteCh9 Then
             Return c - ByteCh0
@@ -110,35 +97,37 @@ Public Module TomlEvaluation
         End If
     End Function
 
+    ''' <summary>キー文字列を取得します。</summary>
+    ''' <param name="token">判定するトークン。</param>
+    ''' <returns>キー文字列。</returns>
     <Extension>
     Public Function GetKeyString(token As TomlToken) As String
         Select Case token.TokenType
             Case TomlToken.TokenTypeEnum.KeyString
                 Return token.ToString()
+
             Case TomlToken.TokenTypeEnum.LiteralString
                 Return token.GetString()
+
             Case Else
                 Throw New TomlSyntaxException($"キー文字列が取得できませんでした:{token}")
         End Select
     End Function
 
+    ''' <summary>ダブルクォーテーション、シングルクォーテーションで囲まれた文字列を取得します。</summary>
+    ''' <param name="token">判定するトークン。</param>
+    ''' <returns>文字列。</returns>
     <Extension>
-    Public Function GetString(token As TomlToken) As String
-        If token.TokenType = TomlToken.TokenTypeEnum.LiteralString Then
+    Private Function GetString(token As TomlToken) As String
+        Try
             Dim rng = token.Range
             If rng.Length > 6 AndAlso
                rng(0) = ByteDoubleQuot AndAlso rng(1) = ByteDoubleQuot AndAlso rng(2) = ByteDoubleQuot AndAlso
                rng(rng.Length - 3) = ByteDoubleQuot AndAlso rng(rng.Length - 2) = ByteDoubleQuot AndAlso rng(rng.Length - 1) = ByteDoubleQuot Then
+                ' """で囲まれている場合、"""を取り除く
                 Dim str = rng.ToString()
                 Dim tmp As New StringBuilder(str.Length)
-
-                Dim stSkip As Integer = 3
-                If str(3) = ChrW(ByteCR) AndAlso str(4) = ChrW(ByteLF) Then
-                    stSkip = 5
-                ElseIf str(3) = ChrW(ByteLF) Then
-                    stSkip = 4
-                End If
-
+                Dim stSkip = str.SkipCrLfPosition()
                 For i As Integer = stSkip To str.Length - 4
                     Dim c = str(i)
                     If c = "\"c Then
@@ -170,17 +159,11 @@ Public Module TomlEvaluation
                             Case "\"c
                                 tmp.Append(ChrW(&H5))
                             Case "u"c
-                                Dim cd1 As Integer = 0
-                                For j As Integer = i + 1 To i + 4
-                                    cd1 = (cd1 << 4) + ConvertHexToByte(str(j))
-                                Next
+                                Dim cd1 = str.GetUnicodeNumber(i, 4)
                                 i += 4
                                 tmp.Append(ChrW(cd1))
                             Case "U"c
-                                Dim cd2 As Integer = 0
-                                For j As Integer = i + 1 To i + 8
-                                    cd2 = (cd2 << 4) + ConvertHexToByte(str(j))
-                                Next
+                                Dim cd2 = str.GetUnicodeNumber(i, 8)
                                 i += 8
                                 tmp.Append(Char.ConvertFromUtf32(cd2))
                             Case Else
@@ -191,7 +174,9 @@ Public Module TomlEvaluation
                     End If
                 Next
                 Return tmp.ToString()
+
             ElseIf rng(0) = ByteDoubleQuot AndAlso rng(rng.Length - 1) = ByteDoubleQuot Then
+                ' "で囲まれている場合、"を取り除く
                 Dim str = rng.ToString()
                 Dim tmp As New StringBuilder(str.Length)
                 For i As Integer = 1 To str.Length - 2
@@ -214,17 +199,11 @@ Public Module TomlEvaluation
                             Case "\"c
                                 tmp.Append(ChrW(&H5))
                             Case "u"c
-                                Dim cd1 As Integer = 0
-                                For j As Integer = i + 1 To i + 4
-                                    cd1 = (cd1 << 4) + ConvertHexToByte(str(j))
-                                Next
+                                Dim cd1 = str.GetUnicodeNumber(i, 4)
                                 i += 4
                                 tmp.Append(ChrW(cd1))
                             Case "U"c
-                                Dim cd2 As Integer = 0
-                                For j As Integer = i + 1 To i + 8
-                                    cd2 = (cd2 << 4) + ConvertHexToByte(str(j))
-                                Next
+                                Dim cd2 = str.GetUnicodeNumber(i, 8)
                                 i += 8
                                 tmp.Append(Char.ConvertFromUtf32(cd2))
                             Case Else
@@ -235,175 +214,306 @@ Public Module TomlEvaluation
                     End If
                 Next
                 Return tmp.ToString()
+
             ElseIf rng.Length > 6 AndAlso
                    rng(0) = ByteSingleQuot AndAlso rng(1) = ByteSingleQuot AndAlso rng(2) = ByteSingleQuot AndAlso
                    rng(rng.Length - 3) = ByteSingleQuot AndAlso rng(rng.Length - 2) = ByteSingleQuot AndAlso rng(rng.Length - 1) = ByteSingleQuot Then
+                ' '''で囲まれている場合、'''を取り除く
                 Dim str = rng.ToString()
-                Dim stSkip As Integer = 3
-                If str(3) = ChrW(ByteCR) AndAlso str(4) = ChrW(ByteLF) Then
-                    stSkip = 5
-                ElseIf str(3) = ChrW(ByteLF) Then
-                    stSkip = 4
-                End If
+                Dim stSkip = str.SkipCrLfPosition()
                 Return str.Substring(stSkip, str.Length - 3 - stSkip)
 
             ElseIf rng(0) = ByteSingleQuot AndAlso rng(rng.Length - 1) = ByteSingleQuot Then
+                ' 'で囲まれている場合、'を取り除く
                 Dim str = rng.ToString()
                 Return str.Substring(1, str.Length - 2)
+
+            Else
+                ' "、'で囲まれていない場合、エラー
+                Throw New TomlSyntaxException($"文字列が取得できませんでした:{token}")
             End If
-        End If
-        Throw New TomlSyntaxException($"文字列が取得できませんでした:{token}")
+
+        Catch ex As Exception
+            Throw New TomlSyntaxException($"文字列が取得できませんでした:{token}", ex)
+        End Try
     End Function
 
-    Private Function ConvertHexToByte(c As Char) As Byte
-        If c >= "0"c AndAlso c <= "9"c Then
-            Return CByte(AscW(c) - AscW("0"c))
-        ElseIf c >= "A"c AndAlso c <= "F"c Then
-            Return CByte(AscW(c) - AscW("A"c) + 10)
-        ElseIf c >= "a"c AndAlso c <= "f"c Then
-            Return CByte(AscW(c) - AscW("a"c) + 10)
-        Else
-            Throw New TomlSyntaxException($"不正な文字です:{c}")
-        End If
-    End Function
-
+    ''' <summary>Unicode番号を取得します。</summary>
+    ''' <param name="str">対象文字列。</param>
+    ''' <param name="start">開始位置。</param>
+    ''' <param name="count">番号数。</param>
+    ''' <returns>Unicode番号。</returns>
     <Extension>
-    Public Function GetDateTime(token As TomlToken) As (Integer, Date, DateTimeOffset)
-        If token.TokenType = TomlToken.TokenTypeEnum.DateLiteral Then
-            Dim raw = token.Raw
-            Dim year = (raw(0) - ByteCh0) * 1000 + (raw(1) - ByteCh0) * 100 + (raw(2) - ByteCh0) * 10 + (raw(3) - ByteCh0)
-            Dim moth = (raw(5) - ByteCh0) * 10 + (raw(6) - ByteCh0)
-            Dim dayd = (raw(8) - ByteCh0) * 10 + (raw(9) - ByteCh0)
-            If raw.Length < 10 Then
-                Return (0, New Date(year, moth, dayd), Nothing)
+    Private Function GetUnicodeNumber(str As String, start As Integer, count As Integer) As Integer
+        Dim cd As Integer = 0
+        For i As Integer = start + 1 To start + count
+            cd = (cd << 4) + ConvertHexToByte(str(i))
+        Next
+        Return cd
+    End Function
+
+    ''' <summary>直後の改行コードをスキップして次の位置を返します。</summary>
+    ''' <param name="str">対象文字列。</param>
+    ''' <returns>スキップ位置。</returns>
+    <Extension>
+    Private Function SkipCrLfPosition(str As String) As Integer
+        If str(3) = ChrW(ByteCR) AndAlso str(4) = ChrW(ByteLF) Then
+            Return 5
+        ElseIf str(3) = ChrW(ByteLF) Then
+            Return 4
+        Else
+            Return 3
+        End If
+    End Function
+
+#Region "数値取得"
+
+    ''' <summary>整数を取得します。</summary>
+    ''' <param name="token">判定するトークン。</param>
+    ''' <returns>整数。</returns>
+    <Extension>
+    Private Function GetLongInteger(token As TomlToken) As Long
+        Try
+            ' 正負の符号を取得、符号があれば次の文字から、なければ開始位置から
+            Dim ans As Long = 0
+            Dim pt As Integer = 0
+            Dim msign As Boolean = False
+            If token(0) = BytePlus Then
+                pt = 1
+            ElseIf token(0) = ByteMinus Then
+                pt = 1
+                msign = True
             End If
 
-            Dim hour = (raw(11) - ByteCh0) * 10 + (raw(12) - ByteCh0)
-            Dim mint = (raw(14) - ByteCh0) * 10 + (raw(15) - ByteCh0)
-            Dim secd = (raw(17) - ByteCh0) * 10 + (raw(18) - ByteCh0)
-            Dim mill As Integer = 0
-            If raw(19) = ByteDot Then
-                For i As Integer = 20 To Math.Min(raw.Length - 1, 22)
-                    mill = mill * 10 + (raw(i) - ByteCh0)
-                Next
-            End If
-
-            Dim off As Integer = -1
-            For i As Integer = 19 To raw.Length - 1
-                If raw(i) = ByteUpZ OrElse raw(i) = BytePlus OrElse raw(i) = ByteMinus Then
-                    off = i
-                    Exit For
+            ' 数値部分を取得
+            For i As Integer = pt To token.Length - 1
+                If token(i) <> ByteUnderBar Then
+                    ans = ans * 10 + (token(i) - ByteCh0)
                 End If
             Next
-            If off < 0 Then
-                Return (0, New Date(year, moth, dayd, hour, mint, secd, mill), Nothing)
-            ElseIf raw(off) = ByteUpZ Then
-                Return (1, Nothing, New DateTimeOffset(year, moth, dayd, hour, mint, secd, mill, TimeSpan.Zero))
-            Else
-                Dim ohour = (raw(off + 1) - ByteCh0) * 10 + (raw(off + 2) - ByteCh0)
-                If raw(off) = ByteMinus Then ohour = -ohour
-                Dim omint = (raw(off + 4) - ByteCh0) * 10 + (raw(off + 5) - ByteCh0)
-                Return (1, Nothing, New DateTimeOffset(year, moth, dayd, hour, mint, secd, mill, New TimeSpan(ohour, omint, 0)))
-            End If
-        Else
-            Throw New TomlSyntaxException($"日付が取得できませんでした:{token}")
-        End If
+
+            ' 結果を返却
+            Return If(msign, -ans, ans)
+
+        Catch ex As Exception
+            Throw New TomlSyntaxException($"整数が取得できませんでした:{token}", ex)
+        End Try
     End Function
 
+    ''' <summary>2, 8, 16進数の整数を取得します。</summary>
+    ''' <param name="token">判定するトークン。</param>
+    ''' <returns>整数。</returns>
     <Extension>
-    Public Function GetTime(token As TomlToken) As TimeSpan
-        If token.TokenType = TomlToken.TokenTypeEnum.TimeLiteral Then
-            Dim raw = token.Raw
-            Dim hour = (raw(0) - ByteCh0) * 10 + (raw(1) - ByteCh0)
-            Dim mint = (raw(3) - ByteCh0) * 10 + (raw(4) - ByteCh0)
-            Dim secd = (raw(6) - ByteCh0) * 10 + (raw(7) - ByteCh0)
-            Dim mill As Integer = 0
-            For i As Integer = 9 To Math.Min(raw.Length - 1, 11)
-                mill = mill * 10 + (raw(i) - ByteCh0)
-            Next
-            Return New TimeSpan(0, hour, mint, secd, mill)
-        End If
-        Throw New TomlSyntaxException($"時間が取得できませんでした:{token}")
+    Private Function GetLongIntegerHexadecimal(token As TomlToken) As Long
+        Try
+            Dim uans As ULong = 0
+
+            Select Case token(1)
+                Case ByteLowX, ByteUpX
+                    ' 16進数
+                    For i As Integer = 2 To token.Length - 1
+                        If token(i) <> ByteUnderBar Then
+                            uans = CULng((uans << 4) + ConvertHexToByte(token(i)))
+                        End If
+                    Next
+                    Return BitConverter.ToInt64(BitConverter.GetBytes(uans), 0)
+
+                Case ByteLowO, ByteUpO
+                    ' 8進数
+                    For i As Integer = 2 To token.Length - 1
+                        If token(i) <> ByteUnderBar Then
+                            uans = CULng((uans << 3) + (token(i) - ByteCh0))
+                        End If
+                    Next
+                    Return BitConverter.ToInt64(BitConverter.GetBytes(uans), 0)
+
+                Case ByteLowB, ByteUpB
+                    ' 2進数
+                    For i As Integer = 2 To token.Length - 1
+                        If token(i) <> ByteUnderBar Then
+                            uans = CULng((uans << 1) + (token(i) - ByteCh0))
+                        End If
+                    Next
+                    Return BitConverter.ToInt64(BitConverter.GetBytes(uans), 0)
+            End Select
+            Return Long.Parse(token.ToString().Substring(2), Globalization.NumberStyles.HexNumber)
+
+        Catch ex As Exception
+            Throw New TomlSyntaxException($"整数が取得できませんでした:{token}", ex)
+        End Try
     End Function
 
+    ''' <summary>実数を取得します。</summary>
+    ''' <param name="token">判定するトークン。</param>
+    ''' <returns>実数。</returns>
     <Extension>
-    Public Function GetArray(token As TomlToken, rng As RawSource.Range) As TomlArray
-        If token.TokenType = TomlToken.TokenTypeEnum.Array Then
-            Dim arr = TryCast(token, TomlHasSubToken)
-            If arr IsNot Nothing Then
-                Dim newarry As New TomlArray(rng)
-                For Each tkn In arr.SubTokens
-                    newarry.Add(CreateTomlValue(tkn))
-                Next
-                Return newarry
-            End If
-        End If
-        Throw New TomlSyntaxException($"配列が取得できませんでした:{token}")
+    Private Function GetReal(token As TomlToken) As Double
+        Return GetReal(token, token.Length)
     End Function
 
+    ''' <summary>実数を取得します（指数表記）</summary>
+    ''' <param name="token">判定するトークン。</param>
+    ''' <returns>実数。</returns>
     <Extension>
-    Public Function GetReal(token As TomlToken) As Double
-        Dim raw = token.Raw
-        Return GetReal(raw, 0, raw.Length)
-    End Function
+    Private Function GetExpReal(token As TomlToken) As Double
+        Dim subTkn = TryCast(token, TomlHasSubToken)
 
-    <Extension>
-    Public Function GetExpReal(token As TomlToken) As Double
-        Dim raw = token.Raw
-        Dim exp As Integer
-        For i As Integer = 1 To raw.Length - 1
-            If raw(i) = ByteLowE OrElse raw(i) = ByteUpE Then
-                exp = i
-                Exit For
-            End If
-        Next
+        ' 仮数部を取得
+        Dim num = GetReal(subTkn.SubTokens(0), subTkn.SubTokens(0).Length)
 
-        Dim num = GetReal(raw, 0, exp)
-        Dim epb = GetReal(raw, exp + 1, raw.Length)
+        ' 指数部を取得
+        Dim epb = GetReal(subTkn.SubTokens(1), subTkn.SubTokens(1).Length)
+
+        ' 結果を返却
         Return num * Math.Pow(10, epb)
     End Function
 
-    Private Function GetReal(raw As Byte(), start As Integer, len As Integer) As Double
-        Dim pt As Integer = start
-        Dim msign As Boolean = False
-        If raw(start) = BytePlus Then
-            pt = start + 1
-        ElseIf raw(start) = ByteMinus Then
-            pt = start + 1
-            msign = True
-        End If
-
-        Dim ans As Long = 0
-        Dim dec As Long = -1
-        For i As Integer = pt To len - 1
-            If raw(i) >= ByteCh0 AndAlso raw(i) <= ByteCh9 Then
-                ans = ans * 10 + (raw(i) - ByteCh0)
-                If dec > -1 Then dec += 1
-            ElseIf raw(i) = ByteDot Then
-                dec = 0
+    ''' <summary>実数を取得します。</summary>
+    ''' <param name="token">トークン。</param>
+    ''' <param name="start">開始位置。</param>
+    ''' <param name="len">長さ。</param>
+    ''' <returns>実数。</returns>
+    Private Function GetReal(token As TomlToken, len As Integer) As Double
+        Try
+            ' 正負の符号を取得、符号があれば次の文字から、なければ開始位置から
+            Dim pt As Integer = 0
+            Dim msign As Boolean = False
+            If token(0) = BytePlus Then
+                pt = 1
+            ElseIf token(0) = ByteMinus Then
+                pt = 1
+                msign = True
             End If
-        Next
-        Return If(msign, -ans, ans) / If(dec >= 0, Math.Pow(10, dec), 1)
+
+            ' 数値部分を取得、小数点があれば小数点の位置を記録
+            Dim ans As Long = 0
+            Dim dec As Long = -1
+            For i As Integer = pt To len - 1
+                If token(i) >= ByteCh0 AndAlso token(i) <= ByteCh9 Then
+                    ans = ans * 10 + (token(i) - ByteCh0)
+                    If dec > -1 Then dec += 1
+                ElseIf token(i) = ByteDot Then
+                    dec = 0
+                End If
+            Next
+
+            ' 結果を返却
+            Return If(msign, -ans, ans) / If(dec >= 0, Math.Pow(10, dec), 1)
+
+        Catch ex As Exception
+            Throw New TomlSyntaxException($"実数が取得できませんでした:{token}", ex)
+        End Try
     End Function
 
+    ''' <summary>Infを取得します。</summary>
+    ''' <param name="token">判定するトークン。</param>
+    ''' <returns>Inf。</returns>
     <Extension>
-    Public Function GetInfReal(token As TomlToken) As Double
-        Dim raw = token.Raw
-        If raw(0) = ByteMinus Then
-            Return Double.NegativeInfinity
-        Else
-            Return Double.PositiveInfinity
-        End If
+    Private Function GetInfReal(token As TomlToken) As Double
+        Return If(token(0) = ByteMinus, Double.NegativeInfinity, Double.PositiveInfinity)
     End Function
 
+    ''' <summary>NaNを取得します。</summary>
+    ''' <param name="token">判定するトークン。</param>
+    ''' <returns>NaN。</returns>
     <Extension>
-    Public Function GetNanReal(token As TomlToken) As Double
-        Dim raw = token.Raw
-        If raw(0) = ByteMinus Then
-            Return -Double.NaN
-        Else
-            Return Double.NaN
-        End If
+    Private Function GetNanReal(token As TomlToken) As Double
+        Return If(token(0) = ByteMinus, -Double.NaN, Double.NaN)
     End Function
+
+#End Region
+
+    ''' <summary>配列を取得します。</summary>
+    ''' <param name="token">判定するトークン。</param>
+    ''' <returns>配列。</returns>
+    <Extension>
+    Private Function GetArray(token As TomlToken) As TomlArray
+        Try
+            Dim arr = TryCast(token, TomlHasSubToken)
+
+            ' 配列を作成、要素を追加
+            Dim newarry As New TomlArray(token.Range)
+            For Each tkn In arr.SubTokens
+                newarry.Add(CreateTomlValue(tkn))
+            Next
+            Return newarry
+
+        Catch ex As Exception
+            Throw New TomlSyntaxException($"配列が取得できませんでした:{token}", ex)
+        End Try
+    End Function
+
+#Region "時間"
+
+    ''' <summary>日付を取得します。</summary>
+    ''' <param name="token">判定するトークン。</param>
+    ''' <returns>日付。</returns>
+    <Extension>
+    Private Function GetDateTime(token As TomlToken) As (Integer, Date, DateTimeOffset)
+        Try
+            ' 日付部分を取得
+            Dim year = (token(0) - ByteCh0) * 1000 + (token(1) - ByteCh0) * 100 + (token(2) - ByteCh0) * 10 + (token(3) - ByteCh0)
+            Dim moth = (token(5) - ByteCh0) * 10 + (token(6) - ByteCh0)
+            Dim dayd = (token(8) - ByteCh0) * 10 + (token(9) - ByteCh0)
+            If token.Length < 10 Then
+                Return (0, New Date(year, moth, dayd), Nothing)
+            End If
+
+            ' 時間部分を取得
+            Dim hour = (token(11) - ByteCh0) * 10 + (token(12) - ByteCh0)
+            Dim mint = (token(14) - ByteCh0) * 10 + (token(15) - ByteCh0)
+            Dim secd = (token(17) - ByteCh0) * 10 + (token(18) - ByteCh0)
+            Dim mill As Integer = 0
+            If token(19) = ByteDot Then
+                For i As Integer = 20 To Math.Min(token.Length - 1, 22)
+                    mill = mill * 10 + (token(i) - ByteCh0)
+                Next
+            End If
+
+            ' タイムゾーン部分を取得
+            For i As Integer = 19 To token.Length - 1
+                If token(i) = ByteUpZ Then
+                    ' UTC
+                    Return (1, Nothing, New DateTimeOffset(year, moth, dayd, hour, mint, secd, mill, TimeSpan.Zero))
+
+                ElseIf token(i) = BytePlus OrElse token(i) = ByteMinus Then
+                    ' オフセット
+                    Dim ohour = (token(i + 1) - ByteCh0) * 10 + (token(i + 2) - ByteCh0)
+                    If token(i) = ByteMinus Then ohour = -ohour
+                    Dim omint = (token(i + 4) - ByteCh0) * 10 + (token(i + 5) - ByteCh0)
+                    Return (1, Nothing, New DateTimeOffset(year, moth, dayd, hour, mint, secd, mill, New TimeSpan(ohour, omint, 0)))
+                End If
+            Next
+            Return (0, New Date(year, moth, dayd, hour, mint, secd, mill), Nothing)
+
+        Catch ex As Exception
+            Throw New TomlSyntaxException($"日付が取得できませんでした:{token}")
+        End Try
+    End Function
+
+    ''' <summary>時間を取得します。</summary>
+    ''' <param name="token">判定するトークン。</param>
+    ''' <returns>時間。</returns>
+    <Extension>
+    Private Function GetTime(token As TomlToken) As TimeSpan
+        Try
+            ' 時間部分を取得
+            Dim hour = (token(0) - ByteCh0) * 10 + (token(1) - ByteCh0)
+            Dim mint = (token(3) - ByteCh0) * 10 + (token(4) - ByteCh0)
+            Dim secd = (token(6) - ByteCh0) * 10 + (token(7) - ByteCh0)
+            Dim mill As Integer = 0
+            For i As Integer = 9 To Math.Min(token.Length - 1, 11)
+                mill = mill * 10 + (token(i) - ByteCh0)
+            Next
+
+            ' 結果を返却
+            Return New TimeSpan(0, hour, mint, secd, mill)
+
+        Catch ex As Exception
+            Throw New TomlSyntaxException($"時間が取得できませんでした:{token}", ex)
+        End Try
+    End Function
+
+#End Region
 
 End Module

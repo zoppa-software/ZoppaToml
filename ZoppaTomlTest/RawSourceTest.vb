@@ -589,4 +589,36 @@ animal = { type.name = ""pug"" }")
         Assert.Equal("animal = { type.name = ""pug"" }", ans(4).ToString())
     End Sub
 
+    <Fact>
+    Sub Case31()
+        Dim query =
+"[[products]]
+name = ""Hammer""
+sku = 738594937
+
+[[products]]  # 配列内の空のテーブル
+
+[[products]]
+name = ""Nail""
+sku = 284758393
+
+color = ""gray"""
+
+        Dim doc = TomlDocument.Load(query)
+
+        Dim tbl0 = doc("products")(0)
+        Assert.Equal(2, tbl0.Length)
+        Assert.Equal("Hammer", tbl0("name").GetValue(Of String)())
+        Assert.Equal(738594937, tbl0("sku").GetValue(Of Long)())
+
+        Dim tbl1 = doc("products")(1)
+        Assert.Equal(0, tbl1.Length)
+
+        Dim tbl2 = doc("products")(2)
+        Assert.Equal(3, tbl2.Length)
+        Assert.Equal("Nail", tbl2("name").GetValue(Of String)())
+        Assert.Equal(284758393, tbl2("sku").GetValue(Of Long)())
+        Assert.Equal("gray", tbl2("color").GetValue(Of String)())
+    End Sub
+
 End Class

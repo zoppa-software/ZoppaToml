@@ -646,6 +646,7 @@ Public Module TomlLexical
     End Function
 
     Private Function GetExponents(raw As RawSource, pointer As RawSource.Pointer, start As Integer) As TomlToken
+        Dim middle = pointer.Index
         Dim isFirst As Boolean = True
         Do While Not pointer.IsEnd
             Dim c = pointer.Current
@@ -659,7 +660,11 @@ Public Module TomlLexical
                     Case ByteCh0 To ByteCh9
                         pointer.Skip(1)
                     Case ByteSpace, ByteTab, ByteCR, ByteLF, ByteComma, ByteRBacket, ByteRBrace
-                        Return New TomlToken(TomlToken.TokenTypeEnum.RealExpLiteral, raw.GetRange(start, pointer.Index - 1))
+                        Dim subTkn = {
+                            New TomlToken(TomlToken.TokenTypeEnum.Other, raw.GetRange(start, middle - 2)),
+                            New TomlToken(TomlToken.TokenTypeEnum.Other, raw.GetRange(middle, pointer.Index - 1))
+                        }
+                        Return New TomlHasSubToken(TomlToken.TokenTypeEnum.RealExpLiteral, raw.GetRange(start, pointer.Index - 1), subTkn)
                     Case Else
                         Throw New TomlSyntaxException($"数値の解析に失敗しました:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
                 End Select
@@ -668,7 +673,11 @@ Public Module TomlLexical
             End If
             isFirst = False
         Loop
-        Return New TomlToken(TomlToken.TokenTypeEnum.RealExpLiteral, raw.GetRange(start, pointer.Index - 1))
+        Dim lsubTkn = {
+            New TomlToken(TomlToken.TokenTypeEnum.Other, raw.GetRange(start, middle - 2)),
+            New TomlToken(TomlToken.TokenTypeEnum.Other, raw.GetRange(middle, pointer.Index - 1))
+        }
+        Return New TomlHasSubToken(TomlToken.TokenTypeEnum.RealExpLiteral, raw.GetRange(start, pointer.Index - 1), lsubTkn)
     End Function
 
     Private Function GetHexadecimal(raw As RawSource, pointer As RawSource.Pointer, start As Integer, limit As Integer, checker As Func(Of Byte, Boolean)) As TomlToken

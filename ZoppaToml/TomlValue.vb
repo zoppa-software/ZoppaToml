@@ -2,7 +2,7 @@
 Option Explicit On
 
 Public MustInherit Class TomlValue
-    Implements ITomlItem
+    Implements ITomlElement
 
     ' 生値参照
     Private mRange As RawSource.Range
@@ -11,27 +11,33 @@ Public MustInherit Class TomlValue
         Me.mRange = rng
     End Sub
 
-    Public ReadOnly Property GetValueType As Type Implements ITomlItem.GetValueType
+    Public ReadOnly Property GetValueType As Type Implements ITomlElement.GetValueType
         Get
             Return Me.GetObject().GetType()
         End Get
     End Property
 
-    Public ReadOnly Property GetValueType(index As Integer) As Type Implements ITomlItem.GetValueType
+    Public ReadOnly Property GetValueType(index As Integer) As Type Implements ITomlElement.GetValueType
         Get
             Return Me.GetObject().GetType()
         End Get
     End Property
 
-    Public ReadOnly Property Length As Integer Implements ITomlItem.Length
+    Public ReadOnly Property Length As Integer Implements ITomlElement.Length
         Get
             Return 0
         End Get
     End Property
 
-    Default Public ReadOnly Property Item(index As String) As ITomlItem Implements ITomlItem.Item
+    Default Public ReadOnly Property Items(keyName As String) As ITomlElement Implements ITomlElement.Items
         Get
             Throw New NotSupportedException()
+        End Get
+    End Property
+
+    Default Public ReadOnly Property Items(index As Integer) As ITomlElement Implements ITomlElement.Items
+        Get
+            Throw New NotImplementedException()
         End Get
     End Property
 
@@ -43,11 +49,15 @@ Public MustInherit Class TomlValue
         Return Me.mRange.ToString()
     End Function
 
-    Public Function GetValue(Of T)() As T Implements ITomlItem.GetValue
+    Public Function [Get]() As Object Implements ITomlElement.Get
+        Return Me.GetObject()
+    End Function
+
+    Public Function GetValue(Of T)() As T Implements ITomlElement.GetValue
         Return CType(Me.GetObject(), T)
     End Function
 
-    Public Function GetValue(Of T)(index As Integer) As T Implements ITomlItem.GetValue
+    Public Function GetValue(Of T)(index As Integer) As T Implements ITomlElement.GetValue
         Return CType(Me.GetObject(), T)
     End Function
 
