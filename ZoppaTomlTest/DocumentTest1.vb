@@ -36,6 +36,8 @@ Public Class DocumentTest1
 
         Assert.Equal(1, doc.Count)
 
+        Assert.Equal(42, doc.GetByKeyNames("a.b.c.answer").GetValue(Of Integer)())
+
         Assert.Equal(42, doc("a")("b")("c")("answer").GetValue(Of Integer)())
         Assert.Equal(43, doc("a")("better").GetValue(Of Integer)())
     End Sub
@@ -48,6 +50,38 @@ Public Class DocumentTest1
 
         Assert.Equal(42, doc("a")("b")("c")("answer").GetValue(Of Integer)())
         Assert.Equal(43, doc("a")("better").GetValue(Of Integer)())
+    End Sub
+
+    <Fact>
+    Sub Case05()
+        Dim doc = TomlDocument.LoadFromFile("valid\spec-example-1.toml")
+
+        'Assert.Equal(1, doc.Count)
+
+        Assert.Equal("TOML Example", doc("title").GetValue(Of String)())
+
+        Assert.Equal("Lance Uppercut", doc("owner")("name").GetValue(Of String)())
+        Assert.Equal(New DateTimeOffset(1979, 5, 27, 7, 32, 0, New TimeSpan(-8, 0, 0)), doc("owner")("dob").GetValue(Of DateTimeOffset)())
+
+        Assert.Equal("192.168.1.1", doc("database")("server").GetValue(Of String)())
+        Assert.Equal(8001, doc("database")("ports")(0).GetValue(Of Integer)())
+        Assert.Equal(8001, doc("database")("ports")(1).GetValue(Of Integer)())
+        Assert.Equal(8002, doc("database")("ports")(2).GetValue(Of Integer)())
+        Assert.Equal(5000, doc("database")("connection_max").GetValue(Of Integer)())
+        Assert.Equal(True, doc("database")("enabled").GetValue(Of Boolean)())
+
+        Assert.Equal("10.0.0.1", doc("servers")("alpha")("ip").GetValue(Of String)())
+        Assert.Equal("eqdc10", doc("servers")("alpha")("dc").GetValue(Of String)())
+
+        Assert.Equal("10.0.0.2", doc("servers")("beta")("ip").GetValue(Of String)())
+        Assert.Equal("eqdc10", doc("servers")("beta")("dc").GetValue(Of String)())
+
+        Assert.Equal("gamma", doc("clients")("data")(0)(0).GetValue(Of String)())
+        Assert.Equal("delta", doc("clients")("data")(0)(1).GetValue(Of String)())
+        Assert.Equal(1, doc("clients")("data")(1)(0).GetValue(Of Integer)())
+        Assert.Equal(2, doc("clients")("data")(1)(1).GetValue(Of Integer)())
+        Assert.Equal("alpha", doc("clients")("hosts")(0).GetValue(Of String)())
+        Assert.Equal("omega", doc("clients")("hosts")(1).GetValue(Of String)())
     End Sub
 
 End Class

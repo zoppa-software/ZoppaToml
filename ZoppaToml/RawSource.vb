@@ -2,7 +2,6 @@
 Option Explicit On
 
 ''' <summary>文字列の生値を表します。</summary>
-
 Public NotInheritable Class RawSource
 
 #Region "properties"
@@ -33,26 +32,40 @@ Public NotInheritable Class RawSource
         Me.Raw = bytes
     End Sub
 
+    ''' <summary>ポインタを取得します。</summary>
+    ''' <returns>ポインタ。</returns>
     Public Function GetPointer() As Pointer
         Return New Pointer(Me)
     End Function
 
+    ''' <summary>ポインタを取得します。</summary>
+    ''' <param name="index">最初のインデックス。</param>
+    ''' <returns>ポインタ。</returns>
     Public Function GetPointer(index As Integer) As Pointer
         Return New Pointer(Me, index)
     End Function
 
+    ''' <summary>範囲を取得します。</summary>
+    ''' <param name="start">開始インデックス。</param>
+    ''' <param name="end">終了インデックス。</param>
+    ''' <returns>範囲。</returns>
     Friend Function GetRange(start As Integer, [end] As Integer) As Range
         Return New Range(Me, start, [end])
     End Function
 
 #Region "inner class"
 
+    ''' <summary>ポインタを表現します。</summary>
     Public NotInheritable Class Pointer
 
+        ' 生値参照
         Private ReadOnly mRaw As RawSource
 
+        ' インデックス
         Private mIndex As Integer
 
+        ''' <summary>現在位置の一文字分のバイト範囲を取得します。</summary>
+        ''' <returns>バイト範囲。</returns>
         Public ReadOnly Property Current As Range
             Get
                 Dim b = Me.mRaw.Raw(Me.mIndex)
@@ -69,31 +82,42 @@ Public NotInheritable Class RawSource
                 ElseIf (b And &HFE) = &HFC Then
                     Return New Range(Me.mRaw, Me.mIndex, Me.mIndex + 5)
                 Else
-                    Throw New InvalidOperationException()
+                    Throw New InvalidOperationException("有効な UTF8文字ではありません")
                 End If
             End Get
         End Property
 
+        ''' <summary>現在位置のインデックスを取得します。</summary>
+        ''' <returns>インデックス。</returns>
         Public ReadOnly Property Index As Integer
             Get
                 Return Me.mIndex
             End Get
         End Property
 
+        ''' <summary>コンストラクタ。</summary>
+        ''' <param name="src">生値参照。</param>
         Public Sub New(src As RawSource)
             Me.mRaw = src
             Me.mIndex = 0
         End Sub
 
+        ''' <summary>コンストラクタ。</summary>
+        ''' <param name="raw">生値参照。</param>
+        ''' <param name="index">インデックス。</param>
         Public Sub New(raw As RawSource, index As Integer)
             Me.mRaw = raw
             Me.mIndex = index
         End Sub
 
+        ''' <summary>終端を超えたかどうかを取得します。</summary>
+        ''' <returns>終端を超えた場合は true。</returns>
         Public Function IsEnd() As Boolean
             Return Me.mIndex >= Me.mRaw.Raw.Length
         End Function
 
+        ''' <summary>現在のバイトとスキップするバイト数を取得します。</summary>
+        ''' <returns>バイト。</returns>
         Public Function GetCurrentByteAndSkip() As (curByte As Byte, skip As Integer)
             Dim b = Me.mRaw.Raw(Me.mIndex)
             If (b And &H80) = 0 Then
@@ -109,10 +133,11 @@ Public NotInheritable Class RawSource
             ElseIf (b And &HFE) = &HFC Then
                 Return (b, 6)
             Else
-                Throw New InvalidOperationException()
+                Throw New InvalidOperationException("有効な UTF8文字ではありません")
             End If
         End Function
 
+        ''' <summary>次の文字へ進みます。</summary>
         Public Sub [Next]()
             Dim b = Me.mRaw.Raw(Me.mIndex)
             If (b And &H80) = 0 Then
@@ -128,26 +153,38 @@ Public NotInheritable Class RawSource
             ElseIf (b And &HFE) = &HFC Then
                 Me.mIndex += 6
             Else
-                Throw New InvalidOperationException()
+                Throw New InvalidOperationException("有効な UTF8文字ではありません")
             End If
         End Sub
 
+        ''' <summary>指定したバイト数だけスキップします。</summary>
+        ''' <param name="count">スキップする数。</param>
         Public Sub [Skip](count As Integer)
             Me.mIndex += count
         End Sub
 
+        ''' <summary>指定したインデックスのバイトを取得します。</summary>
+        ''' <param name="index">インデックス。</param>
+        ''' <returns>バイト。</returns>
         Public Function Peek(index As Integer) As Byte
             Return If(Me.mIndex + index < Me.mRaw.Length, Me.mRaw.Raw(Me.mIndex + index), CByte(0))
         End Function
 
+        ''' <summary>指定した文字数の文字列を取得します。</summary>
+        ''' <param name="charCount">文字数数。</param>
+        ''' <param name="isEllipsis">省略記号を付加するかどうか。</param>
+        ''' <returns>文字列。</returns>
         Public Function TakeChar(charCount As Integer, Optional isEllipsis As Boolean = True) As String
             Dim oldIndex = Me.mIndex
+
+            ' 指定文字数分、ポインタを進める
             Dim i As Integer = 0
             Do While i < charCount - 1 AndAlso Not Me.IsEnd()
                 i += 1
                 Me.Next()
             Loop
 
+            ' 省略記号を付加して文字列を作成
             Dim ans = ""
             If Me.IsEnd Then
                 ans = Me.mRaw.GetRange(oldIndex, Me.mRaw.Length - 1).ToString()
@@ -161,20 +198,30 @@ Public NotInheritable Class RawSource
 
     End Class
 
+    ''' <summary>範囲データを表現します。</summary>
     Public Structure Range
 
+        ' 生値参照
         Private ReadOnly mSource As RawSource
 
+        ''' <summary>範囲の最初のバイトのインデックスを取得します。</summary>
+        ''' <returns>要素のインデックス。</returns>
         Public ReadOnly Property Start As Integer
 
+        ''' <summary>範囲の最後のバイトのインデックスを取得します。</summary>
+        ''' <returns>要素のインデックス。</returns>
         Public ReadOnly Property [End] As Integer
 
+        ''' <summary>範囲の長さを取得します。</summary>
+        ''' <returns>長さ。</returns>
         Public ReadOnly Property Length As Integer
             Get
                 Return (Me.End + 1) - Me.Start
             End Get
         End Property
 
+        ''' <summary>範囲内の生のデータを取得します。</summary>
+        ''' <returns>生のデータ。</returns>
         Public ReadOnly Property Raw As Byte()
             Get
                 Dim res = New Byte(Me.Length - 1) {}
@@ -183,6 +230,9 @@ Public NotInheritable Class RawSource
             End Get
         End Property
 
+        ''' <summary>範囲内のバイトを取得します。</summary>
+        ''' <param name="index">インデックス。</param>
+        ''' <returns>バイト。</returns>
         Default Public ReadOnly Property Items(index As Integer) As Byte
             Get
                 If index >= 0 AndAlso index < Me.Length Then
@@ -193,104 +243,23 @@ Public NotInheritable Class RawSource
             End Get
         End Property
 
+        ''' <summary>コンストラクタ。</summary>
+        ''' <param name="src">生値参照。</param>
+        ''' <param name="start">範囲の最初のバイトのインデックス。</param>
+        ''' <param name="end">範囲の最後のバイトのインデックス。</param>
         Public Sub New(src As RawSource, start As Integer, [end] As Integer)
             Me.mSource = src
             Me.Start = start
             Me.[End] = [end]
         End Sub
 
+        ''' <summary>範囲内のバイト列を文字列に変換します。</summary>
+        ''' <returns>文字列。</returns>
         Public Overrides Function ToString() As String
             Return Text.Encoding.UTF8.GetString(Me.mSource.Raw, Me.Start, Me.Length)
         End Function
 
     End Structure
-
-    'Public Structure ByteStructure
-
-    '    Public ReadOnly data0 As Byte
-
-    '    Public ReadOnly data1 As Byte
-
-    '    Public ReadOnly data2 As Byte
-
-    '    Public ReadOnly data3 As Byte
-
-    '    Public ReadOnly data4 As Byte
-
-    '    Public ReadOnly data5 As Byte
-
-    '    Public ReadOnly Length As Integer
-
-    '    Default Public ReadOnly Property Item(index As Integer) As Byte
-    '        Get
-    '            Select Case index
-    '                Case 0
-    '                    Return Me.data0
-    '                Case 1
-    '                    Return Me.data1
-    '                Case 2
-    '                    Return Me.data2
-    '                Case 3
-    '                    Return Me.data3
-    '                Case 4
-    '                    Return Me.data4
-    '                Case 5
-    '                    Return Me.data5
-    '                Case Else
-    '                    Throw New IndexOutOfRangeException()
-    '            End Select
-    '        End Get
-    '    End Property
-
-    '    Public Sub New(data As Byte(), start As Integer, length As Integer)
-    '        Select Case length
-    '            Case 1
-    '                Me.data0 = data(start + 0)
-    '                Me.data1 = 0
-    '                Me.data2 = 0
-    '                Me.data3 = 0
-    '                Me.data4 = 0
-    '                Me.data5 = 0
-    '            Case 2
-    '                Me.data0 = data(start + 0)
-    '                Me.data1 = data(start + 1)
-    '                Me.data2 = 0
-    '                Me.data3 = 0
-    '                Me.data4 = 0
-    '                Me.data5 = 0
-    '            Case 3
-    '                Me.data0 = data(start + 0)
-    '                Me.data1 = data(start + 1)
-    '                Me.data2 = data(start + 2)
-    '                Me.data3 = 0
-    '                Me.data4 = 0
-    '                Me.data5 = 0
-    '            Case 4
-    '                Me.data0 = data(start + 0)
-    '                Me.data1 = data(start + 1)
-    '                Me.data2 = data(start + 2)
-    '                Me.data3 = data(start + 3)
-    '                Me.data4 = 0
-    '                Me.data5 = 0
-    '            Case 5
-    '                Me.data0 = data(start + 0)
-    '                Me.data1 = data(start + 1)
-    '                Me.data2 = data(start + 2)
-    '                Me.data3 = data(start + 3)
-    '                Me.data4 = data(start + 4)
-    '                Me.data5 = 0
-    '            Case 6
-    '                Me.data0 = data(start + 0)
-    '                Me.data1 = data(start + 1)
-    '                Me.data2 = data(start + 2)
-    '                Me.data3 = data(start + 3)
-    '                Me.data4 = data(start + 4)
-    '                Me.data5 = data(start + 5)
-    '        End Select
-    '        Me.Length = length
-    '    End Sub
-
-    'End Structure
 
 #End Region
 

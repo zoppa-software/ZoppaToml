@@ -29,9 +29,12 @@ Public NotInheritable Class TomlArray
         End Get
     End Property
 
+    ''' <summary>要素を参照します。</summary>
+    ''' <param name="keyNames">要素名。</param>
+    ''' <returns>要素。</returns>
     Default Public ReadOnly Property Items(keyName As String) As ITomlElement Implements ITomlElement.Items
         Get
-            Throw New NotSupportedException()
+            Throw New NotSupportedException("配列は名前参照できません。")
         End Get
     End Property
 

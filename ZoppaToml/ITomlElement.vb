@@ -33,7 +33,7 @@ Public Interface ITomlElement
     Function GetValue(Of T)(index As Integer) As T
 
     ''' <summary>要素を参照します。</summary>
-    ''' <param name="keyName">キーの名前。</param>
+    ''' <param name="keyName">要素名。</param>
     ''' <returns>要素。</returns>
     Default ReadOnly Property Items(keyName As String) As ITomlElement
 

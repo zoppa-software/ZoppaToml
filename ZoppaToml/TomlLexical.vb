@@ -164,7 +164,7 @@ Public Module TomlLexical
     ''' <param name="raw">生値参照。</param>
     ''' <param name="pointer">生値ポインタ。</param>
     ''' <returns>キーと値トークン。</returns>
-    Public Function LexicalKeyAndValue(raw As RawSource, pointer As RawSource.Pointer) As TomlToken
+    Private Function LexicalKeyAndValue(raw As RawSource, pointer As RawSource.Pointer) As TomlToken
         Dim start = pointer.Index
 
         Dim keys = LexicalKey(raw, pointer)
@@ -173,12 +173,21 @@ Public Module TomlLexical
         End If
 
         SkipChars(raw, pointer, ByteSpace, ByteTab)
-        SkipChars(raw, pointer, ByteEqual)
+        Dim eqCount = SkipChars(raw, pointer, ByteEqual)
+        If eqCount <> 1 Then
+            Throw New TomlSyntaxException($"キーと値の間には 1 つのイコール記号が必要です:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
+        End If
         SkipChars(raw, pointer, ByteSpace, ByteTab)
 
         Dim value = LexicalValue(raw, pointer)
 
         Return New TomlKeyValueToken(TokenTypeEnum.KeyAndValue, raw.GetRange(start, pointer.Index - 1), keys.ToArray(), value)
+    End Function
+
+    Public Function LexicalKey(keyNames As String) As List(Of TomlToken)
+        Dim raw As New RawSource(keyNames)
+        Dim keynm = LexicalKey(raw, raw.GetPointer())
+        Return LexicalKey(raw, raw.GetPointer())
     End Function
 
     ''' <summary>キートークンを作成します。</summary>
@@ -233,7 +242,7 @@ Public Module TomlLexical
                 pointer.Skip(cs.skip)
             End If
         Loop
-        Throw New TomlSyntaxException($"キーの解析に失敗しました:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
+        Return res
     End Function
 
     Private Function GetStringFromDoubleQuot(raw As RawSource, pointer As RawSource.Pointer) As TomlToken
@@ -356,16 +365,19 @@ Public Module TomlLexical
         Return New TomlToken(TokenTypeEnum.KeyString, raw.GetRange(start, pointer.Index - 1))
     End Function
 
-    Public Sub SkipChars(raw As RawSource, pointer As RawSource.Pointer, ParamArray ch As Byte())
+    Public Function SkipChars(raw As RawSource, pointer As RawSource.Pointer, ParamArray ch As Byte()) As Integer
+        Dim count As Integer = 0
         Do While Not pointer.IsEnd
             Dim cs = pointer.GetCurrentByteAndSkip()
             If cs.skip = 1 AndAlso Array.IndexOf(ch, cs.curByte) >= 0 Then
+                count += 1
                 pointer.Skip(1)
             Else
-                Return
+                Return count
             End If
         Loop
-    End Sub
+        Return count
+    End Function
 
     Public Function LexicalValue(raw As RawSource, pointer As RawSource.Pointer) As TomlToken
         Dim start = pointer.Index

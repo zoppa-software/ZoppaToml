@@ -113,4 +113,11 @@ Public NotInheritable Class TomlDocument
         Return root
     End Function
 
+    ''' <summary>.で結合したキー名から要素を取得します。</summary>
+    ''' <param name="keyNames">キー名。</param>
+    ''' <returns>要素。</returns>
+    Public Function GetByKeyNames(keyNames As String) As ITomlElement
+        Return Me.mRoot.GetByKeyNames(keyNames)
+    End Function
+
 End Class
