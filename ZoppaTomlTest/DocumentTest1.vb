@@ -30,4 +30,24 @@ Public Class DocumentTest1
         End With
     End Sub
 
+    <Fact>
+    Sub Case03()
+        Dim doc = TomlDocument.LoadFromFile("valid\implicit-and-explicit-after.toml")
+
+        Assert.Equal(1, doc.Count)
+
+        Assert.Equal(42, doc("a")("b")("c")("answer").GetValue(Of Integer)())
+        Assert.Equal(43, doc("a")("better").GetValue(Of Integer)())
+    End Sub
+
+    <Fact>
+    Sub Case04()
+        Dim doc = TomlDocument.LoadFromFile("valid\implicit-and-explicit-before.toml")
+
+        Assert.Equal(1, doc.Count)
+
+        Assert.Equal(42, doc("a")("b")("c")("answer").GetValue(Of Integer)())
+        Assert.Equal(43, doc("a")("better").GetValue(Of Integer)())
+    End Sub
+
 End Class

@@ -94,6 +94,25 @@ Public NotInheritable Class RawSource
             Return Me.mIndex >= Me.mRaw.Raw.Length
         End Function
 
+        Public Function GetCurrentByteAndSkip() As (curByte As Byte, skip As Integer)
+            Dim b = Me.mRaw.Raw(Me.mIndex)
+            If (b And &H80) = 0 Then
+                Return (b, 1)
+            ElseIf (b And &HE0) = &HC0 Then
+                Return (b, 2)
+            ElseIf (b And &HF0) = &HE0 Then
+                Return (b, 3)
+            ElseIf (b And &HF8) = &HF0 Then
+                Return (b, 4)
+            ElseIf (b And &HFC) = &HF8 Then
+                Return (b, 5)
+            ElseIf (b And &HFE) = &HFC Then
+                Return (b, 6)
+            Else
+                Throw New InvalidOperationException()
+            End If
+        End Function
+
         Public Sub [Next]()
             Dim b = Me.mRaw.Raw(Me.mIndex)
             If (b And &H80) = 0 Then

@@ -67,6 +67,8 @@ Public Module TomlEvaluation
         End Select
     End Function
 
+#Region "文字列"
+
     ''' <summary>16進数文字を数値に変換します。</summary>
     ''' <param name="c">文字。</param>
     ''' <returns>数値。</returns>
@@ -265,6 +267,8 @@ Public Module TomlEvaluation
             Return 3
         End If
     End Function
+
+#End Region
 
 #Region "数値取得"
 
