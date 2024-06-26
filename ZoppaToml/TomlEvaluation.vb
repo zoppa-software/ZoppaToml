@@ -17,7 +17,13 @@ Public Module TomlEvaluation
         For i As Integer = 0 To keys.Length + If(isKeyAndValue, -2, -1)
             Dim knm = keys(i).GetKeyString()
             If current.Children.ContainsKey(knm) Then
-                current = DirectCast(current.Children(knm), TomlTable)
+                If TypeOf current.Children(knm) Is TomlTable Then
+                    current = DirectCast(current.Children(knm), TomlTable)
+                ElseIf TypeOf current.Children(knm) Is TomlTableArray AndAlso Not isKeyAndValue Then
+                    current = DirectCast(current.Children(knm), TomlTableArray).GetCurrent()
+                Else
+                    Throw New TomlSyntaxException($"既にテーブル以外で定義されています:{knm}")
+                End If
             Else
                 Dim tbl As New TomlTable(knm)
                 current.Children.Add(knm, tbl)
@@ -33,6 +39,8 @@ Public Module TomlEvaluation
     <Extension>
     Public Function CreateTomlValue(tkn As TomlToken) As ITomlElement
         Select Case tkn.TokenType
+            Case TomlToken.TokenTypeEnum.Comment
+                Return Nothing
             Case TomlToken.TokenTypeEnum.NumberLiteral
                 Return New TomlValue(Of Long)(tkn.Range, tkn.GetLongInteger())
             Case TomlToken.TokenTypeEnum.NumberHexLiteral
@@ -438,7 +446,10 @@ Public Module TomlEvaluation
             ' 配列を作成、要素を追加
             Dim newarry As New TomlArray(token.Range)
             For Each tkn In arr.SubTokens
-                newarry.Add(CreateTomlValue(tkn))
+                Dim v = CreateTomlValue(tkn)
+                If v IsNot Nothing Then
+                    newarry.Add(v)
+                End If
             Next
             Return newarry
 

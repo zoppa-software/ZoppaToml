@@ -84,7 +84,12 @@ Public NotInheritable Class TomlDocument
                 Case TomlToken.TokenTypeEnum.KeyAndValue
                     ' キーと値トークン
                     With DirectCast(tkn, TomlKeyValueToken)
-                        current.TraverseTable(.Keys).Children.Add(.Keys.Last().GetKeyString(), CreateTomlValue(.Value))
+                        Dim v = CreateTomlValue(.Value)
+                        If v IsNot Nothing Then
+                            current.TraverseTable(.Keys).Children.Add(.Keys.Last().GetKeyString(), v)
+                        Else
+                            Throw New TomlSyntaxException($"値の解析に失敗しました。:{ .Value}")
+                        End If
                     End With
 
                 Case TomlToken.TokenTypeEnum.TableHeader
@@ -100,9 +105,13 @@ Public NotInheritable Class TomlDocument
 
                         Dim arrnm = .SubTokens.Last().GetKeyString()
                         If parent.Children.ContainsKey(arrnm) Then
-                            current = TryCast(parent.Children(arrnm), TomlArray).GetNew()
+                            If TypeOf parent.Children(arrnm) Is TomlTableArray Then
+                                current = TryCast(parent.Children(arrnm), TomlTableArray).GetNew()
+                            Else
+                                Throw New TomlSyntaxException($"テーブル配列の名前が重複しています。:{arrnm}")
+                            End If
                         Else
-                            Dim arr = New TomlArray(tkn.Range)
+                            Dim arr = New TomlTableArray(tkn.Range)
                             parent.Children.Add(arrnm, arr)
                             current = arr.GetNew()
                         End If
