@@ -136,4 +136,63 @@ Public Class InvalidTest
         )
     End Sub
 
+    <Fact>
+    Sub DateTimeTest()
+        Assert.Throws(Of TomlSyntaxException)(
+            Sub() TomlDocument.LoadFromFile("invalid\datetime\feb-29.toml")
+        )
+        Assert.Throws(Of TomlSyntaxException)(
+            Sub() TomlDocument.LoadFromFile("invalid\datetime\feb-30.toml")
+        )
+        Assert.Throws(Of TomlSyntaxException)(
+            Sub() TomlDocument.LoadFromFile("invalid\datetime\hour-over.toml")
+        )
+
+        Assert.Throws(Of TomlSyntaxException)(
+            Sub() TomlDocument.LoadFromFile("invalid\datetime\mday-over.toml")
+        )
+        Assert.Throws(Of TomlSyntaxException)(
+            Sub() TomlDocument.LoadFromFile("invalid\datetime\mday-under.toml")
+        )
+        Assert.Throws(Of TomlSyntaxException)(
+            Sub() TomlDocument.LoadFromFile("invalid\datetime\minute-over.toml")
+        )
+        Assert.Throws(Of TomlSyntaxException)(
+            Sub() TomlDocument.LoadFromFile("invalid\datetime\month-over.toml")
+        )
+        Assert.Throws(Of TomlSyntaxException)(
+            Sub() TomlDocument.LoadFromFile("invalid\datetime\month-under.toml")
+        )
+        Assert.Throws(Of TomlSyntaxException)(
+            Sub() TomlDocument.LoadFromFile("invalid\datetime\no-leads-month.toml")
+        )
+        Assert.Throws(Of TomlSyntaxException)(
+            Sub() TomlDocument.LoadFromFile("invalid\datetime\no-leads-with-milli.toml")
+        )
+        Assert.Throws(Of TomlSyntaxException)(
+            Sub() TomlDocument.LoadFromFile("invalid\datetime\no-leads.toml")
+        )
+        Assert.Throws(Of TomlSyntaxException)(
+            Sub() TomlDocument.LoadFromFile("invalid\datetime\no-secs.toml")
+        )
+        Assert.Throws(Of TomlSyntaxException)(
+            Sub() TomlDocument.LoadFromFile("invalid\datetime\no-t.toml")
+        )
+        Assert.Throws(Of TomlSyntaxException)(
+            Sub() TomlDocument.LoadFromFile("invalid\datetime\offset-overflow-hour.toml")
+        )
+        Assert.Throws(Of TomlSyntaxException)(
+            Sub() TomlDocument.LoadFromFile("invalid\datetime\offset-overflow-minute.toml")
+        )
+        Assert.Throws(Of TomlSyntaxException)(
+            Sub() TomlDocument.LoadFromFile("invalid\datetime\second-over.toml")
+        )
+        Assert.Throws(Of TomlSyntaxException)(
+            Sub() TomlDocument.LoadFromFile("invalid\datetime\time-no-leads.toml")
+        )
+        Assert.Throws(Of TomlSyntaxException)(
+            Sub() TomlDocument.LoadFromFile("invalid\datetime\y10k.toml")
+        )
+    End Sub
+
 End Class

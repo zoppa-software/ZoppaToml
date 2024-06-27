@@ -494,7 +494,9 @@ Public Module TomlLexical
            tmPtr.Peek(8) >= ByteCh0 AndAlso tmPtr.Peek(8) <= ByteCh3 AndAlso
            tmPtr.Peek(9) >= ByteCh0 AndAlso tmPtr.Peek(9) <= ByteCh9 Then
             pointer.Skip(6)
-            If pointer.Peek(0) <> ByteUpT AndAlso (pointer.Peek(0) <> ByteSpace OrElse pointer.Peek(1) < ByteCh0 OrElse pointer.Peek(1) > ByteCh9) Then
+            If pointer.Peek(0) <> ByteUpT AndAlso
+               pointer.Peek(0) <> ByteLowT AndAlso
+              (pointer.Peek(0) <> ByteSpace OrElse pointer.Peek(1) < ByteCh0 OrElse pointer.Peek(1) > ByteCh9) Then
                 Return New TomlToken(TokenTypeEnum.DateLiteral, raw.GetRange(start, pointer.Index - 1))
             End If
 
@@ -502,7 +504,7 @@ Public Module TomlLexical
             Dim timePtr = pointer.Index
             pointer.Skip(2)
             GetTime(raw, pointer, timePtr)
-            If pointer.Peek(0) = ByteUpZ Then
+            If pointer.Peek(0) = ByteUpZ OrElse pointer.Peek(0) = ByteLowZ Then
                 pointer.Skip(1)
                 Return New TomlToken(TokenTypeEnum.DateLiteral, raw.GetRange(start, pointer.Index - 1))
             ElseIf pointer.Peek(0) <> BytePlus AndAlso pointer.Peek(0) <> ByteMinus Then
@@ -608,7 +610,7 @@ Public Module TomlLexical
                                     Throw New TomlSyntaxException($"符号付きの2進数は許可されません:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
                                 End If
                             Case ByteCh0 To ByteCh9, ByteUnderBar
-                                If pointer.Peek(2) <> ByteColon Then
+                                If pointer.Peek(2) <> ByteColon AndAlso pointer.Peek(4) <> ByteHyphen Then
                                     Throw New TomlSyntaxException($"先行ゼロは許可されません:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
                                 End If
                         End Select
@@ -644,7 +646,7 @@ Public Module TomlLexical
                             Throw New TomlSyntaxException($"アンダーバーの両側には1桁以上の数字が必要です:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
                         End If
                         pointer.Skip(1)
-                    Case ByteSpace, ByteTab, ByteCR, ByteLF, ByteComma, ByteRBacket, ByteRBrace
+                    Case ByteSpace, ByteTab, ByteCR, ByteLF, ByteComma, ByteRBacket, ByteRBrace, ByteSharp
                         Return New TomlToken(tknType, raw.GetRange(start, pointer.Index - 1))
                     Case ByteHyphen
                         Return GetDateTime(raw, pointer, start)
@@ -684,7 +686,7 @@ Public Module TomlLexical
                         ' 数値ならば次へ
                         pointer.Skip(1)
 
-                    Case ByteSpace, ByteTab, ByteCR, ByteLF, ByteComma, ByteRBacket, ByteRBrace
+                    Case ByteSpace, ByteTab, ByteCR, ByteLF, ByteComma, ByteRBacket, ByteRBrace, ByteSharp
                         ' 区切りに使用できる文字ならばトークン作成
                         Dim subTkn = {
                             New TomlToken(TokenTypeEnum.Other, raw.GetRange(start, middle - 2)),
@@ -751,7 +753,8 @@ Public Module TomlLexical
                        cs.curByte = ByteLF OrElse
                        cs.curByte = ByteComma OrElse
                        cs.curByte = ByteRBacket OrElse
-                       cs.curByte = ByteRBrace Then
+                       cs.curByte = ByteRBrace OrElse
+                       cs.curByte = ByteSharp Then
                     ' 区切りに使用できる文字ならばトークン作成
                     Return New TomlToken(TokenTypeEnum.NumberHexLiteral, raw.GetRange(start, pointer.Index - 1))
                 Else
@@ -847,6 +850,10 @@ Public Module TomlLexical
                         Else
                             Throw New TomlSyntaxException($"要素が正しく , で区切られていません:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
                         End If
+
+                    Case ByteSharp
+                        ' コメントを読み込む
+                        LexicalComment(raw, pointer)
 
                     Case ByteRBrace
                         ' } で項目読み込み後ならばトークン作成

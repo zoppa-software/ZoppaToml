@@ -70,6 +70,8 @@ Public Module TomlEvaluation
                 Return New TomlValue(Of Double)(tkn.Range, tkn.GetInfReal())
             Case TomlToken.TokenTypeEnum.NanLiteral
                 Return New TomlValue(Of Double)(tkn.Range, tkn.GetNanReal())
+            Case TomlToken.TokenTypeEnum.Inline
+                Return tkn.GetInlineTable()
             Case Else
                 Throw New TomlSyntaxException($"不明なトークンです:{tkn}")
         End Select
@@ -435,6 +437,8 @@ Public Module TomlEvaluation
 
 #End Region
 
+#Region "配列"
+
     ''' <summary>配列を取得します。</summary>
     ''' <param name="token">判定するトークン。</param>
     ''' <returns>配列。</returns>
@@ -458,6 +462,37 @@ Public Module TomlEvaluation
         End Try
     End Function
 
+#End Region
+
+#Region "インラインテーブル"
+
+    ''' <summary>インラインテーブルを取得します。</summary>
+    ''' <param name="token">判定するトークン。</param>
+    ''' <returns>インラインテーブル。</returns>
+    <Extension>
+    Private Function GetInlineTable(token As TomlToken) As TomlTable
+        Try
+            Dim srcbl = TryCast(token, TomlHasSubToken)
+
+            ' インラインテーブルを作成、要素を追加
+            Dim intbl As New TomlTable("")
+            For Each tkn In srcbl.SubTokens
+                Dim kv = TryCast(tkn, TomlKeyValueToken)
+                If kv IsNot Nothing Then
+                    intbl.Children.Add(kv.Keys(0).GetKeyString(), CreateTomlValue(kv.Value))
+                Else
+                    Throw New TomlSyntaxException($"インラインテーブルが取得できませんでした:{token}")
+                End If
+            Next
+            Return intbl
+
+        Catch ex As Exception
+            Throw New TomlSyntaxException($"インラインテーブルが取得できませんでした:{token}", ex)
+        End Try
+    End Function
+
+#End Region
+
 #Region "時間"
 
     ''' <summary>日付を取得します。</summary>
@@ -470,7 +505,7 @@ Public Module TomlEvaluation
             Dim year = (token(0) - ByteCh0) * 1000 + (token(1) - ByteCh0) * 100 + (token(2) - ByteCh0) * 10 + (token(3) - ByteCh0)
             Dim moth = (token(5) - ByteCh0) * 10 + (token(6) - ByteCh0)
             Dim dayd = (token(8) - ByteCh0) * 10 + (token(9) - ByteCh0)
-            If token.Length < 10 Then
+            If token.Length < 11 Then
                 Return (0, New Date(year, moth, dayd), Nothing)
             End If
 
@@ -487,15 +522,21 @@ Public Module TomlEvaluation
 
             ' タイムゾーン部分を取得
             For i As Integer = 19 To token.Length - 1
-                If token(i) = ByteUpZ Then
+                If token(i) = ByteUpZ OrElse token(i) = ByteLowZ Then
                     ' UTC
                     Return (1, Nothing, New DateTimeOffset(year, moth, dayd, hour, mint, secd, mill, TimeSpan.Zero))
 
                 ElseIf token(i) = BytePlus OrElse token(i) = ByteMinus Then
                     ' オフセット
                     Dim ohour = (token(i + 1) - ByteCh0) * 10 + (token(i + 2) - ByteCh0)
+                    If ohour < 0 OrElse ohour > 23 Then
+                        Throw New TomlSyntaxException($"時間が不正です:{token}")
+                    End If
                     If token(i) = ByteMinus Then ohour = -ohour
                     Dim omint = (token(i + 4) - ByteCh0) * 10 + (token(i + 5) - ByteCh0)
+                    If omint < 0 OrElse omint > 59 Then
+                        Throw New TomlSyntaxException($"分が不正です:{token}")
+                    End If
                     Return (1, Nothing, New DateTimeOffset(year, moth, dayd, hour, mint, secd, mill, New TimeSpan(ohour, omint, 0)))
                 End If
             Next
