@@ -530,11 +530,14 @@ Public Module TomlLexical
            tmPtr.Peek(1) >= ByteCh0 AndAlso tmPtr.Peek(1) <= ByteCh9 AndAlso
            tmPtr.Peek(2) = ByteColon AndAlso
            tmPtr.Peek(3) >= ByteCh0 AndAlso tmPtr.Peek(3) <= ByteCh9 AndAlso
-           tmPtr.Peek(4) >= ByteCh0 AndAlso tmPtr.Peek(4) <= ByteCh9 AndAlso
-           tmPtr.Peek(5) = ByteColon AndAlso
-           tmPtr.Peek(6) >= ByteCh0 AndAlso tmPtr.Peek(6) <= ByteCh9 AndAlso
-           tmPtr.Peek(7) >= ByteCh0 AndAlso tmPtr.Peek(7) <= ByteCh9 Then
-            pointer.Skip(6)
+           tmPtr.Peek(4) >= ByteCh0 AndAlso tmPtr.Peek(4) <= ByteCh9 Then
+            If tmPtr.Peek(5) = ByteColon AndAlso
+            tmPtr.Peek(6) >= ByteCh0 AndAlso tmPtr.Peek(6) <= ByteCh9 AndAlso
+            tmPtr.Peek(7) >= ByteCh0 AndAlso tmPtr.Peek(7) <= ByteCh9 Then
+                pointer.Skip(6)
+            Else
+                pointer.Skip(3)
+            End If
             If pointer.Peek(0) <> ByteDot Then
                 Return New TomlToken(TokenTypeEnum.TimeLiteral, raw.GetRange(start, pointer.Index - 1))
             End If
@@ -670,6 +673,7 @@ Public Module TomlLexical
     ''' <returns>トークン。</returns>
     Private Function GetExponents(raw As RawSource, pointer As RawSource.Pointer, start As Integer) As TomlToken
         Dim middle = pointer.Index
+        Dim prev As Byte = 0
         Dim isFirst As Boolean = True
         Do While Not pointer.IsEnd
             Dim cs = pointer.GetCurrentByteAndSkip()
@@ -686,6 +690,13 @@ Public Module TomlLexical
                         ' 数値ならば次へ
                         pointer.Skip(1)
 
+                    Case ByteUnderBar
+                        If (prev < ByteCh0 OrElse prev > ByteCh9) OrElse
+                           (pointer.Peek(1) < ByteCh0 OrElse pointer.Peek(1) > ByteCh9) Then
+                            Throw New TomlSyntaxException($"アンダーバーの両側には1桁以上の数字が必要です:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
+                        End If
+                        pointer.Skip(1)
+
                     Case ByteSpace, ByteTab, ByteCR, ByteLF, ByteComma, ByteRBacket, ByteRBrace, ByteSharp
                         ' 区切りに使用できる文字ならばトークン作成
                         Dim subTkn = {
@@ -698,6 +709,7 @@ Public Module TomlLexical
                         ' 数値以外の文字が来た場合は例外
                         Throw New TomlSyntaxException($"数値の解析に失敗しました:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
                 End Select
+                prev = cs.curByte
             Else
                 Throw New TomlSyntaxException($"数値に全角文字は使用できません:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
             End If

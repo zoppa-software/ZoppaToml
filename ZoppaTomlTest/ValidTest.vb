@@ -190,4 +190,49 @@ Public Class ValidTest
         Assert.Equal(New DateTime(1987, 7, 5, 17, 45, 0), doc("space").GetValue(Of DateTime)())
     End Sub
 
+    <Fact>
+    Sub DatetimeTest5()
+        Dim doc = TomlDocument.LoadFromFile("valid\datetime\local-date.toml")
+
+        Assert.Equal(New Date(1987, 7, 5, 0, 0, 0), doc("bestdayever").GetValue(Of Date)())
+    End Sub
+
+    <Fact>
+    Sub DatetimeTest6()
+        Dim doc = TomlDocument.LoadFromFile("valid\datetime\local-time.toml")
+
+        Assert.Equal(New TimeSpan(17, 45, 0), doc("besttimeever").GetValue(Of TimeSpan)())
+        Assert.Equal(New TimeSpan(0, 10, 32, 0, 555), doc("milliseconds").GetValue(Of TimeSpan)())
+    End Sub
+
+    <Fact>
+    Sub DatetimeTest7()
+        Dim doc = TomlDocument.LoadFromFile("valid\datetime\milliseconds.toml")
+
+        Assert.Equal(New DateTimeOffset(1987, 7, 5, 17, 45, 56, 123, TimeSpan.Zero), doc("utc1").GetValue(Of DateTimeOffset)())
+        Assert.Equal(New DateTimeOffset(1987, 7, 5, 17, 45, 56, 6, TimeSpan.Zero), doc("utc2").GetValue(Of DateTimeOffset)())
+        Assert.Equal(New DateTimeOffset(1987, 7, 5, 17, 45, 56, 123, New TimeSpan(8, 0, 0)), doc("wita1").GetValue(Of DateTimeOffset)())
+        Assert.Equal(New DateTimeOffset(1987, 7, 5, 17, 45, 56, 6, New TimeSpan(8, 0, 0)), doc("wita2").GetValue(Of DateTimeOffset)())
+    End Sub
+
+    <Fact>
+    Sub DatetimeTest8()
+        Dim doc = TomlDocument.LoadFromFile("valid\datetime\no-seconds.toml")
+
+        Assert.Equal(New TimeSpan(13, 37, 0), doc("without-seconds-1").GetValue(Of TimeSpan)())
+        Assert.Equal(New DateTimeOffset(1979, 5, 27, 7, 32, 0, TimeSpan.Zero), doc("without-seconds-2").GetValue(Of DateTimeOffset)())
+        Assert.Equal(New DateTimeOffset(1979, 5, 27, 7, 32, 0, New TimeSpan(-7, 0, 0)), doc("without-seconds-3").GetValue(Of DateTimeOffset)())
+        Assert.Equal(New Date(1979, 5, 27, 7, 32, 0), doc("without-seconds-4").GetValue(Of Date)())
+    End Sub
+
+    <Fact>
+    Sub DatetimeTest9()
+        Dim doc = TomlDocument.LoadFromFile("valid\datetime\timezone.toml")
+
+        Assert.Equal(New DateTimeOffset(1987, 7, 5, 17, 45, 56, TimeSpan.Zero), doc("utc").GetValue(Of DateTimeOffset)())
+        Assert.Equal(New DateTimeOffset(1987, 7, 5, 17, 45, 56, New TimeSpan(-5, 0, 0)), doc("pdt").GetValue(Of DateTimeOffset)())
+        Assert.Equal(New DateTimeOffset(1987, 7, 5, 17, 45, 56, New TimeSpan(12, 0, 0)), doc("nzst").GetValue(Of DateTimeOffset)())
+        Assert.Equal(New DateTimeOffset(1987, 7, 5, 17, 45, 56, New TimeSpan(13, 0, 0)), doc("nzdt").GetValue(Of DateTimeOffset)())
+    End Sub
+
 End Class

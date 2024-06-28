@@ -1,6 +1,7 @@
 ﻿Option Strict On
 Option Explicit On
 
+''' <summary>Toml値を表す抽象クラスです。</summary>
 Public MustInherit Class TomlValue
     Implements ITomlElement
 

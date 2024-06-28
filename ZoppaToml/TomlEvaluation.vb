@@ -512,16 +512,30 @@ Public Module TomlEvaluation
             ' 時間部分を取得
             Dim hour = (token(11) - ByteCh0) * 10 + (token(12) - ByteCh0)
             Dim mint = (token(14) - ByteCh0) * 10 + (token(15) - ByteCh0)
-            Dim secd = (token(17) - ByteCh0) * 10 + (token(18) - ByteCh0)
+
+            Dim secd = 0
+            Dim dtSplit As Integer = 19
+            If token.Length > 16 AndAlso token(16) = ByteColon Then
+                secd = (token(17) - ByteCh0) * 10 + (token(18) - ByteCh0)
+                dtSplit = 19
+            Else
+                dtSplit = 16
+            End If
+
             Dim mill As Integer = 0
-            If token(19) = ByteDot Then
-                For i As Integer = 20 To Math.Min(token.Length - 1, 22)
-                    mill = mill * 10 + (token(i) - ByteCh0)
+            If token.Length > dtSplit - 1 AndAlso token(dtSplit) = ByteDot Then
+                For i As Integer = dtSplit + 1 To Math.Min(token.Length - 1, dtSplit + 3)
+                    If token(i) >= ByteCh0 AndAlso token(i) <= ByteCh9 Then
+                        mill = mill * 10 + (token(i) - ByteCh0)
+                    Else
+                        dtSplit = i
+                        Exit For
+                    End If
                 Next
             End If
 
             ' タイムゾーン部分を取得
-            For i As Integer = 19 To token.Length - 1
+            For i As Integer = dtSplit To token.Length - 1
                 If token(i) = ByteUpZ OrElse token(i) = ByteLowZ Then
                     ' UTC
                     Return (1, Nothing, New DateTimeOffset(year, moth, dayd, hour, mint, secd, mill, TimeSpan.Zero))
@@ -556,7 +570,7 @@ Public Module TomlEvaluation
             ' 時間部分を取得
             Dim hour = (token(0) - ByteCh0) * 10 + (token(1) - ByteCh0)
             Dim mint = (token(3) - ByteCh0) * 10 + (token(4) - ByteCh0)
-            Dim secd = (token(6) - ByteCh0) * 10 + (token(7) - ByteCh0)
+            Dim secd = If(token.Length > 5, (token(6) - ByteCh0) * 10 + (token(7) - ByteCh0), 0)
             Dim mill As Integer = 0
             For i As Integer = 9 To Math.Min(token.Length - 1, 11)
                 mill = mill * 10 + (token(i) - ByteCh0)
