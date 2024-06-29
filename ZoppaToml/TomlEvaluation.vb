@@ -289,7 +289,7 @@ Public Module TomlEvaluation
     Private Function GetLongInteger(token As TomlToken) As Long
         Try
             ' 正負の符号を取得、符号があれば次の文字から、なければ開始位置から
-            Dim ans As Long = 0
+            Dim ans As ULong = 0
             Dim pt As Integer = 0
             Dim msign As Boolean = False
             If token(0) = BytePlus Then
@@ -302,12 +302,14 @@ Public Module TomlEvaluation
             ' 数値部分を取得
             For i As Integer = pt To token.Length - 1
                 If token(i) <> ByteUnderBar Then
-                    ans = ans * 10 + (token(i) - ByteCh0)
+                    Dim a1 = ans << 3
+                    Dim a2 = ans << 1
+                    ans = a1 + a2 + (token(i) - ByteCh0)
                 End If
             Next
 
             ' 結果を返却
-            Return If(msign, -ans, ans)
+            Return If(msign, CLng(-ans), CLng(ans))
 
         Catch ex As Exception
             Throw New TomlSyntaxException($"整数が取得できませんでした:{token}", ex)

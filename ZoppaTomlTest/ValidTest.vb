@@ -235,4 +235,76 @@ Public Class ValidTest
         Assert.Equal(New DateTimeOffset(1987, 7, 5, 17, 45, 56, New TimeSpan(13, 0, 0)), doc("nzdt").GetValue(Of DateTimeOffset)())
     End Sub
 
+    <Fact>
+    Sub IntegerTest1()
+        Dim doc As Object = TomlDocument.LoadFromFile("valid\integer\float64-max.toml")
+
+        Assert.Equal(9007199254740991, doc.max_int.GetValue(Of Long)())
+        Assert.Equal(-9007199254740991, doc.min_int.GetValue(Of Long)())
+    End Sub
+
+    <Fact>
+    Sub IntegerTest2()
+        Dim doc As Object = TomlDocument.LoadFromFile("valid\integer\integer.toml")
+
+        Assert.Equal(42, doc.answer.GetValue(Of Integer)())
+        Assert.Equal(42, doc.posanswer.GetValue(Of Integer)())
+        Assert.Equal(-42, doc.neganswer.GetValue(Of Integer)())
+        Assert.Equal(0, doc.zero.GetValue(Of Integer)())
+    End Sub
+
+    <Fact>
+    Sub IntegerTest3()
+        Dim doc As Object = TomlDocument.LoadFromFile("valid\integer\literals.toml")
+
+        Assert.Equal(&B11010110, doc.bin1.GetValue(Of Integer)())
+        Assert.Equal(&B101, doc.bin2.GetValue(Of Integer)())
+
+        Assert.Equal(&O1234567, doc.oct1.GetValue(Of Integer)())
+        Assert.Equal(&O755, doc.oct2.GetValue(Of Integer)())
+        Assert.Equal(&O765, doc.oct3.GetValue(Of Integer)())
+
+        Assert.Equal(&HDEADBEEFL, doc.hex1.GetValue(Of UInteger)())
+        Assert.Equal(&HDEADBEEFL, doc.hex2.GetValue(Of UInteger)())
+        Assert.Equal(&HDEADBEEFL, doc.hex3.GetValue(Of UInteger)())
+        Assert.Equal(&H987, doc.hex4.GetValue(Of UInteger)())
+    End Sub
+
+    <Fact>
+    Sub IntegerTest4()
+        Dim doc As Object = TomlDocument.LoadFromFile("valid\integer\long.toml")
+
+        Assert.Equal(Long.MaxValue, doc("int64-max").GetValue(Of Long)())
+        Assert.Equal(Long.MinValue, doc("int64-max-neg").GetValue(Of Long)())
+    End Sub
+
+    <Fact>
+    Sub IntegerTest5()
+        Dim doc As Object = TomlDocument.LoadFromFile("valid\integer\underscore.toml")
+
+        Assert.Equal(1000, doc("kilo").GetValue(Of Integer)())
+        Assert.Equal(1111, doc("x").GetValue(Of Integer)())
+    End Sub
+
+    <Fact>
+    Sub IntegerTest6()
+        Dim doc As Object = TomlDocument.LoadFromFile("valid\integer\zero.toml")
+
+        Assert.Equal(0, doc.d1.GetValue(Of Integer)())
+        Assert.Equal(0, doc.d2.GetValue(Of Integer)())
+        Assert.Equal(0, doc.d3.GetValue(Of Integer)())
+
+        Assert.Equal(0, doc.h1.GetValue(Of Integer)())
+        Assert.Equal(0, doc.h2.GetValue(Of Integer)())
+        Assert.Equal(0, doc.h3.GetValue(Of Integer)())
+
+        Assert.Equal(0, doc.o1.GetValue(Of Integer)())
+        Assert.Equal(0, doc.a2.GetValue(Of Integer)())
+        Assert.Equal(0, doc.a3.GetValue(Of Integer)())
+
+        Assert.Equal(0, doc.b1.GetValue(Of Integer)())
+        Assert.Equal(0, doc.b2.GetValue(Of Integer)())
+        Assert.Equal(0, doc.b3.GetValue(Of Integer)())
+    End Sub
+
 End Class
