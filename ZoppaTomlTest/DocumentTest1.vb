@@ -84,4 +84,53 @@ Public Class DocumentTest1
         Assert.Equal("omega", doc("clients")("hosts")(1).GetValue(Of String)())
     End Sub
 
+    <Fact>
+    Sub Case06()
+        Dim data = New Byte() {&HFF, &HFF, &HFF, &HFF, &HFF, &HFF, &HFF, &HFF}
+        Dim raw = New RawSource(data)
+        Dim point = raw.GetPointer()
+        Assert.Throws(Of InvalidOperationException)(
+            Sub()
+                Dim a = point.Current
+            End Sub
+        )
+    End Sub
+
+    <Fact>
+    Sub Case07()
+        Dim doc = TomlDocument.Load("integers = [ 1, 2, 3 ]")
+
+        Assert.Equal(GetType(TomlArray), doc("integers").GetValueType)
+
+        Assert.Equal(GetType(Long), doc("integers").GetValueType(0))
+        Assert.Throws(Of IndexOutOfRangeException)(
+            Sub()
+                Dim a = doc("integers").GetValueType(3)
+            End Sub
+        )
+
+        Assert.Throws(Of NotSupportedException)(
+            Sub()
+                Dim a = doc("integers")("noname")
+            End Sub
+        )
+
+        Assert.Throws(Of IndexOutOfRangeException)(
+            Sub()
+                Dim a = doc("integers")(3).GetValue(Of Integer)()
+            End Sub
+        )
+
+        Assert.Equal(GetType(TomlArray), doc("integers").Get.GetType())
+        Assert.Equal(GetType(TomlArray), doc("integers").GetValue(Of TomlArray).GetType())
+
+        Assert.Throws(Of IndexOutOfRangeException)(
+            Sub()
+                Dim a = doc("integers").GetValue(Of Integer)(3)
+            End Sub
+        )
+
+        Assert.Equal("[ 1, 2, 3 ]", doc("integers").ToString())
+    End Sub
+
 End Class

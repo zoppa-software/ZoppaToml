@@ -4,7 +4,7 @@ Imports Xunit
 Imports ZoppaToml
 Imports ZoppaToml.TomlLexical
 
-Public Class ValidTest
+Public Class Valid0Test
 
     <Fact>
     Sub Array1Test()

@@ -3,6 +3,8 @@
   <PropertyGroup>
     <RootNamespace>ZoppaToml</RootNamespace>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageLicenseFile>License.txt</PackageLicenseFile>
+	<Version>0.1.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,6 +15,22 @@
 
   <ItemGroup>
     <Compile Remove="TomlMethod.vb" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\Message.resx">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\Message.ja.resx">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="License.txt">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>

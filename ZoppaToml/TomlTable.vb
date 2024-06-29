@@ -8,20 +8,28 @@ Public NotInheritable Class TomlTable
     Inherits DynamicObject
     Implements ITomlElement
 
+    ''' <summary>子要素を取得します。</summary>
     Public ReadOnly Property Children As New SortedList(Of String, ITomlElement)()
 
+    ''' <summary>値の型を取得します。</summary>
+    ''' <returns>値の型。</returns>
     Public ReadOnly Property GetValueType As Type Implements ITomlElement.GetValueType
         Get
             Return Me.GetType()
         End Get
     End Property
 
+    ''' <summary>値の型を取得します。</summary>
+    ''' <param name="index">インデックス。</param>
+    ''' <returns>値の型。</returns>
     Public ReadOnly Property GetValueType(index As Integer) As Type Implements ITomlElement.GetValueType
         Get
             Return Me.GetValueType()
         End Get
     End Property
 
+    ''' <summary>値の数を取得します。</summary>
+    ''' <returns>値の数。</returns>
     Public ReadOnly Property Length As Integer Implements ITomlElement.Length
         Get
             Return Me.Children.Count
@@ -39,24 +47,36 @@ Public NotInheritable Class TomlTable
                     Return res
                 End If
             End If
-            Throw New KeyNotFoundException()
+            Throw New KeyNotFoundException("指定のキーの要素がありません")
         End Get
     End Property
 
+    ''' <summary>要素を参照します（配列）</summary>
+    ''' <param name="index">インデックス。</param>
+    ''' <returns>要素。</returns>
     Default Public ReadOnly Property Items(index As Integer) As ITomlElement Implements ITomlElement.Items
         Get
-            Throw New NotImplementedException()
+            Throw New NotImplementedException("テーブルは添え字参照できません")
         End Get
     End Property
 
+    ''' <summary>値を取得します。</summary>
+    ''' <returns>値。</returns>
     Public Function [Get]() As Object Implements ITomlElement.Get
         Return Me
     End Function
 
+    ''' <summary>値を取得します。</summary>
+    ''' <typeparam name="T">型。</typeparam>
+    ''' <param name="index">インデックス。</param>
+    ''' <returns>値。</returns>
     Public Function GetValue(Of T)() As T Implements ITomlElement.GetValue
         Return DirectCast(DirectCast(Me, Object), T)
     End Function
 
+    ''' <summary>要素を参照します（配列）</summary>
+    ''' <param name="index">インデックス。</param>
+    ''' <returns>要素。</returns>
     Public Function GetValue(Of T)(index As Integer) As T Implements ITomlElement.GetValue
         Return Me.GetValue(Of T)()
     End Function
@@ -65,23 +85,30 @@ Public NotInheritable Class TomlTable
     ''' <param name="keyNames">キー名。</param>
     ''' <returns>要素。</returns>
     Public Function GetByKeyNames(keyNames As String) As ITomlElement
+        ' キーの名称を分割
         Dim keynm = LexicalKey(keyNames)
 
+        ' キーの名称をたどってテーブルを取得
+        '
+        ' 1. キーを取得
+        ' 2. キーのテーブルを取得
         Dim current As TomlTable = Me
         For i As Integer = 0 To keynm.Count - 2
-            Dim key = keynm(i).GetKeyString()
-            If current.Children.ContainsKey(key) Then
+            Dim key = keynm(i).GetKeyString()           ' 1
+
+            If current.Children.ContainsKey(key) Then   ' 2
                 Dim res = TryCast(current.Children(key), TomlTable)
                 If res IsNot Nothing Then
                     current = res
                 Else
-                    Throw New KeyNotFoundException()
+                    Throw New KeyNotFoundException($"指定の名称のテーブルがありません:{key}")
                 End If
             Else
-                Throw New KeyNotFoundException()
+                Throw New KeyNotFoundException($"指定の名称のテーブルがありません:{key}")
             End If
         Next
 
+        ' 最後のキーから要素を取得
         Dim lastKey = keynm(keynm.Count - 1).GetKeyString()
         If current.Children.ContainsKey(lastKey) Then
             Dim res = TryCast(current.Children(lastKey), ITomlElement)
@@ -89,7 +116,7 @@ Public NotInheritable Class TomlTable
                 Return res
             End If
         End If
-        Throw New KeyNotFoundException()
+        Throw New KeyNotFoundException($"指定の名称の要素がありません:{lastKey}")
     End Function
 
     ''' <summary>列挙子を取得します。</summary>

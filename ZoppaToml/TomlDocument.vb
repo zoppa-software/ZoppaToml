@@ -64,7 +64,7 @@ Public NotInheritable Class TomlDocument
             ' インスタンスを生成
             Return New TomlDocument(New RawSource(bytes))
         Else
-            Throw New IO.FileNotFoundException($"対象ファイルが存在しません:{path}")
+            Throw New IO.FileNotFoundException(GetMessage("E004", path))
         End If
     End Function
 
@@ -91,7 +91,7 @@ Public NotInheritable Class TomlDocument
                         If v IsNot Nothing Then
                             current.TraverseTable(.Keys).Children.Add(.Keys.Last().GetKeyString(), v)
                         Else
-                            Throw New TomlSyntaxException($"値の解析に失敗しました。:{ .Value}")
+                            Throw New TomlSyntaxException(GetMessage("E005", .Value))
                         End If
                     End With
 
@@ -111,7 +111,7 @@ Public NotInheritable Class TomlDocument
                             If TypeOf parent.Children(arrnm) Is TomlTableArray Then
                                 current = TryCast(parent.Children(arrnm), TomlTableArray).GetNew()
                             Else
-                                Throw New TomlSyntaxException($"テーブル配列の名前が重複しています。:{arrnm}")
+                                Throw New TomlSyntaxException(GetMessage("E006", arrnm))
                             End If
                         Else
                             Dim arr = New TomlTableArray(tkn.Range)

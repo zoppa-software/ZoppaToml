@@ -140,10 +140,19 @@ Public Module TomlEvaluation
                 Dim str = rng.ToString()
                 Dim tmp As New StringBuilder(str.Length)
                 Dim stSkip = str.SkipCrLfPosition()
+                Dim notesc = False
                 For i As Integer = stSkip To str.Length - 4
                     Dim c = str(i)
-                    If c = "\"c Then
+                    If c = "\"c AndAlso Not notesc Then
                         i += 1
+                        Dim j = i
+                        Do While str(j) = " "c OrElse str(j) = vbTab
+                            j += 1
+                        Loop
+                        If str(j) = ChrW(ByteCR) OrElse str(j) = ChrW(ByteLF) Then
+                            i = j
+                        End If
+
                         Select Case str(i)
                             Case ChrW(ByteCR)
                                 If str(i + 1) = ChrW(ByteLF) Then
@@ -158,6 +167,8 @@ Public Module TomlEvaluation
                                 Loop
                             Case "b"c
                                 tmp.Append(ChrW(&H8))
+                            Case "e"c
+                                notesc = Not notesc
                             Case "t"c
                                 tmp.Append(ChrW(&H9))
                             Case "n"c
@@ -169,7 +180,7 @@ Public Module TomlEvaluation
                             Case """"c
                                 tmp.Append(ChrW(&H22))
                             Case "\"c
-                                tmp.Append(ChrW(&H5))
+                                tmp.Append("\"c)
                             Case "u"c
                                 Dim cd1 = str.GetUnicodeNumber(i, 4)
                                 i += 4
@@ -181,6 +192,9 @@ Public Module TomlEvaluation
                             Case Else
                                 Throw New TomlSyntaxException($"不明なエスケープシーケンスです:{token}")
                         End Select
+                    ElseIf c = "\"c AndAlso str(i + 1) = "e"c Then
+                        notesc = True
+                        i += 2
                     Else
                         tmp.Append(c)
                     End If
@@ -191,13 +205,16 @@ Public Module TomlEvaluation
                 ' "で囲まれている場合、"を取り除く
                 Dim str = rng.ToString()
                 Dim tmp As New StringBuilder(str.Length)
+                Dim notesc = False
                 For i As Integer = 1 To str.Length - 2
                     Dim c = str(i)
-                    If c = "\"c Then
+                    If c = "\"c AndAlso Not notesc Then
                         i += 1
                         Select Case str(i)
                             Case "b"c
                                 tmp.Append(ChrW(&H8))
+                            Case "e"c
+                                notesc = Not notesc
                             Case "t"c
                                 tmp.Append(ChrW(&H9))
                             Case "n"c
@@ -209,7 +226,7 @@ Public Module TomlEvaluation
                             Case """"c
                                 tmp.Append(ChrW(&H22))
                             Case "\"c
-                                tmp.Append(ChrW(&H5))
+                                tmp.Append("\"c)
                             Case "u"c
                                 Dim cd1 = str.GetUnicodeNumber(i, 4)
                                 i += 4
@@ -221,6 +238,9 @@ Public Module TomlEvaluation
                             Case Else
                                 Throw New TomlSyntaxException($"不明なエスケープシーケンスです:{token}")
                         End Select
+                    ElseIf c = "\"c AndAlso str(i + 1) = "e"c Then
+                        notesc = True
+                        i += 2
                     Else
                         tmp.Append(c)
                     End If

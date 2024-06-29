@@ -1,13 +1,16 @@
 ﻿Option Strict On
 Option Explicit On
 
+Imports System.ComponentModel
 Imports System.Runtime.CompilerServices
 Imports ZoppaToml.TomlToken
 
+''' <summary>Toml構文解析モジュールです。</summary>
 Public Module TomlLexical
 
     <Extension>
     Public Function Lexical(raw As RawSource) As List(Of TomlToken)
+
         Dim res As New List(Of TomlToken)()
 
         Dim pointer = raw.GetPointer()
@@ -278,7 +281,7 @@ Public Module TomlLexical
             Dim cs = pointer.GetCurrentByteAndSkip()
             If cs.skip = 1 Then
                 If pointer.Peek(0) = ByteBKSlash AndAlso
-                       pointer.Peek(1) = ByteDoubleQuot Then
+                  (pointer.Peek(1) = ByteDoubleQuot OrElse pointer.Peek(1) = ByteBKSlash) Then
                     pointer.Skip(2)
                 ElseIf pointer.Peek(0) = ByteDoubleQuot Then
                     pointer.Skip(1)
@@ -427,59 +430,6 @@ Public Module TomlLexical
         Throw New TomlSyntaxException($"値の解析に失敗しました:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
     End Function
 
-    Private Function GetTrueLiteral(raw As RawSource, pointer As RawSource.Pointer) As TomlToken
-        Dim start = pointer.Index
-
-        If pointer.Peek(0) = AscW("t"c) AndAlso
-           pointer.Peek(1) = AscW("r"c) AndAlso
-           pointer.Peek(2) = AscW("u"c) AndAlso
-           pointer.Peek(3) = AscW("e"c) Then
-            pointer.Skip(4)
-            Return New TomlToken(TokenTypeEnum.TrueLiteral, raw.GetRange(start, pointer.Index - 1))
-        End If
-        Throw New TomlSyntaxException($"解析できないリテラルです:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
-    End Function
-
-    Private Function GetFalseLiteral(raw As RawSource, pointer As RawSource.Pointer) As TomlToken
-        Dim start = pointer.Index
-
-        If pointer.Peek(0) = AscW("f"c) AndAlso
-           pointer.Peek(1) = AscW("a"c) AndAlso
-           pointer.Peek(2) = AscW("l"c) AndAlso
-           pointer.Peek(3) = AscW("s"c) AndAlso
-           pointer.Peek(4) = AscW("e"c) Then
-            pointer.Skip(5)
-            Return New TomlToken(TokenTypeEnum.FalseLiteral, raw.GetRange(start, pointer.Index - 1))
-        End If
-        Throw New TomlSyntaxException($"解析できないリテラルです:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
-    End Function
-
-    Private Function GetInfLiteral(raw As RawSource, pointer As RawSource.Pointer, start As Integer) As TomlToken
-        If pointer.Peek(0) = AscW("i"c) AndAlso
-           pointer.Peek(1) = AscW("n"c) AndAlso
-           pointer.Peek(2) = AscW("f"c) Then
-            pointer.Skip(3)
-            Return New TomlToken(TokenTypeEnum.InfLiteral, raw.GetRange(start, pointer.Index - 1))
-        End If
-        Throw New TomlSyntaxException($"解析できないリテラルです:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
-    End Function
-
-    Private Function GetNanLiteral(raw As RawSource, pointer As RawSource.Pointer, start As Integer) As TomlToken
-        If pointer.Peek(0) = AscW("n"c) AndAlso
-           pointer.Peek(1) = AscW("a"c) AndAlso
-           pointer.Peek(2) = AscW("n"c) Then
-            pointer.Skip(3)
-            Return New TomlToken(TokenTypeEnum.NanLiteral, raw.GetRange(start, pointer.Index - 1))
-        End If
-        Throw New TomlSyntaxException($"解析できないリテラルです:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
-    End Function
-
-    Private Function GetNumber(raw As RawSource, pointer As RawSource.Pointer) As TomlToken
-        Return GetNumber(raw, pointer, pointer.Index, True)
-    End Function
-
-
-
     Private Function GetDateTime(raw As RawSource, pointer As RawSource.Pointer, start As Integer) As TomlToken
         Dim tmPtr = raw.GetPointer(start)
         If tmPtr.Peek(0) >= ByteCh0 AndAlso tmPtr.Peek(0) <= ByteCh9 AndAlso
@@ -566,6 +516,14 @@ Public Module TomlLexical
     ''' <param name="raw">生値ソース。</param>
     ''' <param name="pointer">ポインター。</param>
     ''' <returns>数値トークン。</returns>
+    Private Function GetNumber(raw As RawSource, pointer As RawSource.Pointer) As TomlToken
+        Return GetNumber(raw, pointer, pointer.Index, True)
+    End Function
+
+    ''' <summary>正の数値を取得します。</summary>
+    ''' <param name="raw">生値ソース。</param>
+    ''' <param name="pointer">ポインター。</param>
+    ''' <returns>数値トークン。</returns>
     Private Function GetPlusNumber(raw As RawSource, pointer As RawSource.Pointer) As TomlToken
         Dim start = pointer.Index
         pointer.Skip(1)
@@ -585,7 +543,7 @@ Public Module TomlLexical
         End Select
     End Function
 
-    ''' <summary>マイナスの数値を取得します。</summary>
+    ''' <summary>負の数値を取得します。</summary>
     ''' <param name="raw">生値ソース。</param>
     ''' <param name="pointer">ポインター。</param>
     ''' <returns>数値トークン。</returns>
@@ -840,6 +798,75 @@ Public Module TomlLexical
             End If
         Loop
         Return New TomlToken(TokenTypeEnum.NumberHexLiteral, raw.GetRange(start, pointer.Index - 1))
+    End Function
+
+    ''' <summary>無限大リテラルを取得します。</summary>
+    ''' <param name="raw">生値ソース。</param>
+    ''' <param name="pointer">ポインター。</param>
+    ''' <param name="start">開始位置。</param>
+    ''' <returns>トークン。</returns>
+    Private Function GetInfLiteral(raw As RawSource, pointer As RawSource.Pointer, start As Integer) As TomlToken
+        If pointer.Peek(0) = AscW("i"c) AndAlso
+           pointer.Peek(1) = AscW("n"c) AndAlso
+           pointer.Peek(2) = AscW("f"c) Then
+            pointer.Skip(3)
+            Return New TomlToken(TokenTypeEnum.InfLiteral, raw.GetRange(start, pointer.Index - 1))
+        End If
+        Throw New TomlSyntaxException($"解析できないリテラルです:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
+    End Function
+
+    ''' <summary>非数値リテラルを取得します。</summary>
+    ''' <param name="raw">生値ソース。</param>
+    ''' <param name="pointer">ポインター。</param>
+    ''' <param name="start">開始位置。</param>
+    ''' <returns>トークン。</returns>
+    Private Function GetNanLiteral(raw As RawSource, pointer As RawSource.Pointer, start As Integer) As TomlToken
+        If pointer.Peek(0) = AscW("n"c) AndAlso
+           pointer.Peek(1) = AscW("a"c) AndAlso
+           pointer.Peek(2) = AscW("n"c) Then
+            pointer.Skip(3)
+            Return New TomlToken(TokenTypeEnum.NanLiteral, raw.GetRange(start, pointer.Index - 1))
+        End If
+        Throw New TomlSyntaxException($"解析できないリテラルです:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
+    End Function
+
+#End Region
+
+#Region "真偽値"
+
+    ''' <summary>真値リテラルを取得します。</summary>
+    ''' <param name="raw">生値ソース。</param>
+    ''' <param name="pointer">ポインター。</param>
+    ''' <returns>トークン。</returns>
+    Private Function GetTrueLiteral(raw As RawSource, pointer As RawSource.Pointer) As TomlToken
+        Dim start = pointer.Index
+
+        If pointer.Peek(0) = AscW("t"c) AndAlso
+           pointer.Peek(1) = AscW("r"c) AndAlso
+           pointer.Peek(2) = AscW("u"c) AndAlso
+           pointer.Peek(3) = AscW("e"c) Then
+            pointer.Skip(4)
+            Return New TomlToken(TokenTypeEnum.TrueLiteral, raw.GetRange(start, pointer.Index - 1))
+        End If
+        Throw New TomlSyntaxException($"解析できないリテラルです:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
+    End Function
+
+    ''' <summary>偽値リテラルを取得します。</summary>
+    ''' <param name="raw">生値ソース。</param>
+    ''' <param name="pointer">ポインター。</param>
+    ''' <returns>トークン。</returns>
+    Private Function GetFalseLiteral(raw As RawSource, pointer As RawSource.Pointer) As TomlToken
+        Dim start = pointer.Index
+
+        If pointer.Peek(0) = AscW("f"c) AndAlso
+           pointer.Peek(1) = AscW("a"c) AndAlso
+           pointer.Peek(2) = AscW("l"c) AndAlso
+           pointer.Peek(3) = AscW("s"c) AndAlso
+           pointer.Peek(4) = AscW("e"c) Then
+            pointer.Skip(5)
+            Return New TomlToken(TokenTypeEnum.FalseLiteral, raw.GetRange(start, pointer.Index - 1))
+        End If
+        Throw New TomlSyntaxException($"解析できないリテラルです:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
     End Function
 
 #End Region

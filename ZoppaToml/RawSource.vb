@@ -82,7 +82,7 @@ Public NotInheritable Class RawSource
                 ElseIf (b And &HFE) = &HFC Then
                     Return New Range(Me.mRaw, Me.mIndex, Me.mIndex + 5)
                 Else
-                    Throw New InvalidOperationException("有効な UTF8文字ではありません")
+                    Throw New InvalidOperationException(GetMessage("E001"))
                 End If
             End Get
         End Property
@@ -133,7 +133,7 @@ Public NotInheritable Class RawSource
             ElseIf (b And &HFE) = &HFC Then
                 Return (b, 6)
             Else
-                Throw New InvalidOperationException("有効な UTF8文字ではありません")
+                Throw New InvalidOperationException(GetMessage("E001"))
             End If
         End Function
 
@@ -153,7 +153,7 @@ Public NotInheritable Class RawSource
             ElseIf (b And &HFE) = &HFC Then
                 Me.mIndex += 6
             Else
-                Throw New InvalidOperationException("有効な UTF8文字ではありません")
+                Throw New InvalidOperationException(GetMessage("E001"))
             End If
         End Sub
 

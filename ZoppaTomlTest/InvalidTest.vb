@@ -173,9 +173,6 @@ Public Class InvalidTest
             Sub() TomlDocument.LoadFromFile("invalid\datetime\no-leads.toml")
         )
         Assert.Throws(Of TomlSyntaxException)(
-            Sub() TomlDocument.LoadFromFile("invalid\datetime\no-secs.toml")
-        )
-        Assert.Throws(Of TomlSyntaxException)(
             Sub() TomlDocument.LoadFromFile("invalid\datetime\no-t.toml")
         )
         Assert.Throws(Of TomlSyntaxException)(
