@@ -25,7 +25,7 @@ Public Module TomlEvaluation
                     Throw New TomlSyntaxException($"既にテーブル以外で定義されています:{knm}")
                 End If
             Else
-                Dim tbl As New TomlTable(knm)
+                Dim tbl As New TomlTable()
                 current.Children.Add(knm, tbl)
                 current = tbl
             End If
@@ -475,11 +475,12 @@ Public Module TomlEvaluation
             Dim srcbl = TryCast(token, TomlHasSubToken)
 
             ' インラインテーブルを作成、要素を追加
-            Dim intbl As New TomlTable("")
+            Dim intbl As New TomlTable()
             For Each tkn In srcbl.SubTokens
                 Dim kv = TryCast(tkn, TomlKeyValueToken)
                 If kv IsNot Nothing Then
-                    intbl.Children.Add(kv.Keys(0).GetKeyString(), CreateTomlValue(kv.Value))
+                    'intbl.Children.Add(kv.Keys(0).GetKeyString(), CreateTomlValue(kv.Value))
+                    intbl.TraverseTable(kv.Keys).Children.Add(kv.Keys(kv.Keys.Length - 1).GetKeyString(), CreateTomlValue(kv.Value))
                 Else
                     Throw New TomlSyntaxException($"インラインテーブルが取得できませんでした:{token}")
                 End If

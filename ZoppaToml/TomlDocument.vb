@@ -1,8 +1,11 @@
 ﻿Option Strict On
 Option Explicit On
 
+Imports System.Dynamic
+
 ''' <summary>テーブルトークンを表すクラスです。</summary>
 Public NotInheritable Class TomlDocument
+    Inherits DynamicObject
 
     ' 生値ソース
     Private ReadOnly mRaw As RawSource
@@ -76,7 +79,7 @@ Public NotInheritable Class TomlDocument
     ''' <param name="token">トークンリスト。</param>
     ''' <returns>TomlTable。</returns>
     Private Shared Function Analisys(token As List(Of TomlToken)) As TomlTable
-        Dim root As New TomlTable("")
+        Dim root As New TomlTable()
         Dim current = root
 
         For Each tkn In token
@@ -127,6 +130,14 @@ Public NotInheritable Class TomlDocument
     ''' <returns>要素。</returns>
     Public Function GetByKeyNames(keyNames As String) As ITomlElement
         Return Me.mRoot.GetByKeyNames(keyNames)
+    End Function
+
+    ''' <summary>動的メンバーを取得します。</summary>
+    ''' <param name="binder">バインダー。</param>
+    ''' <param name="result">取得値。</param>
+    ''' <returns>取得出来たら真。</returns>
+    Public Overrides Function TryGetMember(binder As GetMemberBinder, ByRef result As Object) As Boolean
+        Return Me.mRoot.TryGetMember(binder, result)
     End Function
 
 End Class

@@ -65,9 +65,18 @@ Public MustInherit Class TomlValue
         Return CType(Me.GetObject(), T)
     End Function
 
+    ''' <summary>列挙子を取得します。</summary>
+    ''' <returns>列挙子。</returns>
+    Public Function GetEnumerator() As IEnumerator Implements IEnumerable.GetEnumerator
+        Dim res As New List(Of ITomlElement) From {
+            Me
+        }
+        Return New TomlCollectionEnumerator(Of ITomlElement)(res)
+    End Function
+
 End Class
 
-Public Class TomlValue(Of T)
+Friend Class TomlValue(Of T)
     Inherits TomlValue
 
     Public ReadOnly Value As T

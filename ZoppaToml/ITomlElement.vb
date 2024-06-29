@@ -3,6 +3,7 @@ Option Explicit On
 
 ''' <summary>項目を表すインターフェイスです。</summary>
 Public Interface ITomlElement
+    Inherits IEnumerable
 
     ''' <summary>値の型を取得します。</summary>
     ''' <returns>値の型。</returns>

@@ -185,11 +185,11 @@ Public NotInheritable Class RawSource
             Loop
 
             ' 省略記号を付加して文字列を作成
-            Dim ans = ""
+            Dim ans As String
             If Me.IsEnd Then
                 ans = Me.mRaw.GetRange(oldIndex, Me.mRaw.Length - 1).ToString()
             Else
-                ans = Me.mRaw.GetRange(oldIndex, Me.mIndex).ToString() & "..."
+                ans = Me.mRaw.GetRange(oldIndex, Me.mIndex).ToString() & If(isEllipsis, "...", "")
             End If
 
             Me.mIndex = oldIndex

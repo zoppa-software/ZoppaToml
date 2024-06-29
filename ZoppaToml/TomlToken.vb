@@ -73,7 +73,7 @@ Public Class TomlToken
     End Enum
 
     ' トークンの種類
-    Private mType As TokenTypeEnum
+    Private ReadOnly mType As TokenTypeEnum
 
     ' 生値参照
     Private mRange As RawSource.Range

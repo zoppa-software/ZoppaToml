@@ -100,7 +100,7 @@ Public NotInheritable Class TomlTableArray
     ''' <summary>新しいテーブルを取得します。</summary>
     ''' <returns>テーブル。</returns>
     Friend Function GetNew() As TomlTable
-        Dim tbl As New TomlTable("")
+        Dim tbl As New TomlTable()
         Me.mItems.Add(tbl)
         Return tbl
     End Function
@@ -109,6 +109,18 @@ Public NotInheritable Class TomlTableArray
     ''' <returns>テーブル。</returns>
     Friend Function GetCurrent() As TomlTable
         Return Me.mItems(Me.mItems.Count - 1)
+    End Function
+
+    ''' <summary>文字列表現を取得します。</summary>
+    ''' <returns>文字列表現。</returns>
+    Public Overrides Function ToString() As String
+        Return Me.mRange.ToString()
+    End Function
+
+    ''' <summary>列挙子を取得します。</summary>
+    ''' <returns>列挙子。</returns>
+    Public Function GetEnumerator() As IEnumerator Implements IEnumerable.GetEnumerator
+        Return New TomlCollectionEnumerator(Of TomlTable)(Me.mItems)
     End Function
 
 End Class

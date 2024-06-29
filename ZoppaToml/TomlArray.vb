@@ -103,4 +103,16 @@ Public NotInheritable Class TomlArray
         End If
     End Function
 
+    ''' <summary>文字列表現を取得します。</summary>
+    ''' <returns>文字列表現。</returns>
+    Public Overrides Function ToString() As String
+        Return Me.mRange.ToString()
+    End Function
+
+    ''' <summary>列挙子を取得します。</summary>
+    ''' <returns>列挙子。</returns>
+    Public Function GetEnumerator() As IEnumerator Implements IEnumerable.GetEnumerator
+        Return New TomlCollectionEnumerator(Of ITomlElement)(Me.mItems)
+    End Function
+
 End Class

@@ -1,11 +1,12 @@
 ﻿Option Strict On
 Option Explicit On
 
+Imports System.Dynamic
+
 ''' <summary>テーブルを表すクラスです。</summary>
 Public NotInheritable Class TomlTable
+    Inherits DynamicObject
     Implements ITomlElement
-
-    Public ReadOnly Property Name As String
 
     Public ReadOnly Property Children As New SortedList(Of String, ITomlElement)()
 
@@ -48,15 +49,6 @@ Public NotInheritable Class TomlTable
         End Get
     End Property
 
-
-    Public Sub New(name As String)
-        Me.Name = name
-    End Sub
-
-    Public Overrides Function ToString() As String
-        Return Me.Name
-    End Function
-
     Public Function [Get]() As Object Implements ITomlElement.Get
         Return Me
     End Function
@@ -98,6 +90,26 @@ Public NotInheritable Class TomlTable
             End If
         End If
         Throw New KeyNotFoundException()
+    End Function
+
+    ''' <summary>列挙子を取得します。</summary>
+    ''' <returns>列挙子。</returns>
+    Public Function GetEnumerator() As IEnumerator Implements IEnumerable.GetEnumerator
+        Dim res As New List(Of ITomlElement)(Me.Children.Values)
+        Return New TomlCollectionEnumerator(Of ITomlElement)(res)
+    End Function
+
+    ''' <summary>動的メンバーを取得します。</summary>
+    ''' <param name="binder">バインダー。</param>
+    ''' <param name="result">取得値。</param>
+    ''' <returns>取得出来たら真。</returns>
+    Public Overrides Function TryGetMember(binder As GetMemberBinder, ByRef result As Object) As Boolean
+        If Me.Children.ContainsKey(binder.Name) Then
+            result = Me.Children(binder.Name)
+            Return True
+        Else
+            Return False
+        End If
     End Function
 
 End Class
