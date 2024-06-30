@@ -29,7 +29,7 @@ Public NotInheritable Class TomlTableArray
             If index >= 0 AndAlso index < Me.mItems.Count Then
                 Return Me.mItems(index).GetValueType()
             Else
-                Throw New IndexOutOfRangeException()
+                Throw New IndexOutOfRangeException(GetMessage("E027"))
             End If
         End Get
     End Property
@@ -39,7 +39,7 @@ Public NotInheritable Class TomlTableArray
     ''' <returns>要素。</returns>
     Default Public ReadOnly Property Items(keyName As String) As ITomlElement Implements ITomlElement.Items
         Get
-            Throw New NotSupportedException("配列は名前参照できません。")
+            Throw New NotSupportedException(GetMessage("E059"))
         End Get
     End Property
 
@@ -53,7 +53,7 @@ Public NotInheritable Class TomlTableArray
             If index >= 0 AndAlso index < Me.mItems.Count Then
                 Return Me.mItems(index)
             Else
-                Throw New IndexOutOfRangeException()
+                Throw New IndexOutOfRangeException(GetMessage("E027"))
             End If
         End Get
     End Property

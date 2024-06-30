@@ -99,7 +99,7 @@ Public NotInheritable Class TomlArray
         If index >= 0 AndAlso index < Me.mItems.Count Then
             Return Me.mItems(index).GetValue(Of T)()
         Else
-            Throw New IndexOutOfRangeException("配列の範囲外を指定しています。")
+            Throw New IndexOutOfRangeException(GetMessage("E027"))
         End If
     End Function
 

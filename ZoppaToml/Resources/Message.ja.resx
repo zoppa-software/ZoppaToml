@@ -291,4 +291,7 @@
   <data name="E058" xml:space="preserve">
     <value>日付の解析に失敗しました。:{0}</value>
   </data>
+  <data name="E059" xml:space="preserve">
+    <value>配列は名前参照できません。</value>
+  </data>
 </root>

@@ -291,4 +291,7 @@
   <data name="E058" xml:space="preserve">
     <value>Failed to parse the date. :{0}</value>
   </data>
+  <data name="E059" xml:space="preserve">
+    <value>Arrays cannot be referenced by name.</value>
+  </data>
 </root>
