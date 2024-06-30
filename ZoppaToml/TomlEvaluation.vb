@@ -22,7 +22,7 @@ Public Module TomlEvaluation
                 ElseIf TypeOf current.Children(knm) Is TomlTableArray AndAlso Not isKeyAndValue Then
                     current = DirectCast(current.Children(knm), TomlTableArray).GetCurrent()
                 Else
-                    Throw New TomlSyntaxException($"既にテーブル以外で定義されています:{knm}")
+                    Throw New TomlSyntaxException(GetMessage("E007", knm))
                 End If
             Else
                 Dim tbl As New TomlTable()
@@ -37,7 +37,7 @@ Public Module TomlEvaluation
     ''' <param name="tkn">トークン。</param>
     ''' <returns>要素。</returns>
     <Extension>
-    Public Function CreateTomlValue(tkn As TomlToken) As ITomlElement
+    Function CreateTomlValue(tkn As TomlToken) As ITomlElement
         Select Case tkn.TokenType
             Case TomlToken.TokenTypeEnum.Comment
                 Return Nothing
@@ -73,7 +73,7 @@ Public Module TomlEvaluation
             Case TomlToken.TokenTypeEnum.Inline
                 Return tkn.GetInlineTable()
             Case Else
-                Throw New TomlSyntaxException($"不明なトークンです:{tkn}")
+                Throw New TomlSyntaxException(GetMessage("E008", tkn))
         End Select
     End Function
 
@@ -90,7 +90,7 @@ Public Module TomlEvaluation
         ElseIf c >= "a"c AndAlso c <= "f"c Then
             Return CByte(AscW(c) - AscW("a"c) + 10)
         Else
-            Throw New TomlSyntaxException($"不正な文字です:{c}")
+            Throw New TomlSyntaxException(GetMessage("E009", c))
         End If
     End Function
 
@@ -105,7 +105,7 @@ Public Module TomlEvaluation
         ElseIf c >= ByteLowA AndAlso c <= ByteLowF Then
             Return c - ByteLowA + 10
         Else
-            Throw New TomlSyntaxException($"不正な文字です:{c}")
+            Throw New TomlSyntaxException(GetMessage("E009", ChrW(c)))
         End If
     End Function
 
@@ -122,7 +122,7 @@ Public Module TomlEvaluation
                 Return token.GetString()
 
             Case Else
-                Throw New TomlSyntaxException($"キー文字列が取得できませんでした:{token}")
+                Throw New TomlSyntaxException(GetMessage("E010", token))
         End Select
     End Function
 
@@ -189,8 +189,12 @@ Public Module TomlEvaluation
                                 Dim cd2 = str.GetUnicodeNumber(i, 8)
                                 i += 8
                                 tmp.Append(Char.ConvertFromUtf32(cd2))
+                            Case "x"c
+                                Dim cd3 = str.GetUnicodeNumber(i, 2)
+                                i += 2
+                                tmp.Append(ChrW(cd3))
                             Case Else
-                                Throw New TomlSyntaxException($"不明なエスケープシーケンスです:{token}")
+                                Throw New TomlSyntaxException(GetMessage("E011", token))
                         End Select
                     ElseIf c = "\"c AndAlso str(i + 1) = "e"c Then
                         notesc = True
@@ -235,8 +239,12 @@ Public Module TomlEvaluation
                                 Dim cd2 = str.GetUnicodeNumber(i, 8)
                                 i += 8
                                 tmp.Append(Char.ConvertFromUtf32(cd2))
+                            Case "x"c
+                                Dim cd3 = str.GetUnicodeNumber(i, 2)
+                                i += 2
+                                tmp.Append(ChrW(cd3))
                             Case Else
-                                Throw New TomlSyntaxException($"不明なエスケープシーケンスです:{token}")
+                                Throw New TomlSyntaxException(GetMessage("E011", token))
                         End Select
                     ElseIf c = "\"c AndAlso str(i + 1) = "e"c Then
                         notesc = True
@@ -332,7 +340,7 @@ Public Module TomlEvaluation
             Return If(msign, CLng(-ans), CLng(ans))
 
         Catch ex As Exception
-            Throw New TomlSyntaxException($"整数が取得できませんでした:{token}", ex)
+            Throw New TomlSyntaxException(GetMessage("E012", token), ex)
         End Try
     End Function
 
@@ -375,7 +383,7 @@ Public Module TomlEvaluation
             Return Long.Parse(token.ToString().Substring(2), Globalization.NumberStyles.HexNumber)
 
         Catch ex As Exception
-            Throw New TomlSyntaxException($"整数が取得できませんでした:{token}", ex)
+            Throw New TomlSyntaxException(GetMessage("E012", token), ex)
         End Try
     End Function
 
@@ -437,7 +445,7 @@ Public Module TomlEvaluation
             Return If(msign, -ans, ans) / If(dec >= 0, Math.Pow(10, dec), 1)
 
         Catch ex As Exception
-            Throw New TomlSyntaxException($"実数が取得できませんでした:{token}", ex)
+            Throw New TomlSyntaxException(GetMessage("E013", token), ex)
         End Try
     End Function
 
@@ -480,7 +488,7 @@ Public Module TomlEvaluation
             Return newarry
 
         Catch ex As Exception
-            Throw New TomlSyntaxException($"配列が取得できませんでした:{token}", ex)
+            Throw New TomlSyntaxException(GetMessage("E015", token), ex)
         End Try
     End Function
 
@@ -504,13 +512,13 @@ Public Module TomlEvaluation
                     'intbl.Children.Add(kv.Keys(0).GetKeyString(), CreateTomlValue(kv.Value))
                     intbl.TraverseTable(kv.Keys).Children.Add(kv.Keys(kv.Keys.Length - 1).GetKeyString(), CreateTomlValue(kv.Value))
                 Else
-                    Throw New TomlSyntaxException($"インラインテーブルが取得できませんでした:{token}")
+                    Throw New TomlSyntaxException(GetMessage("E014", token))
                 End If
             Next
             Return intbl
 
         Catch ex As Exception
-            Throw New TomlSyntaxException($"インラインテーブルが取得できませんでした:{token}", ex)
+            Throw New TomlSyntaxException(GetMessage("E014", token), ex)
         End Try
     End Function
 
@@ -567,12 +575,12 @@ Public Module TomlEvaluation
                     ' オフセット
                     Dim ohour = (token(i + 1) - ByteCh0) * 10 + (token(i + 2) - ByteCh0)
                     If ohour < 0 OrElse ohour > 23 Then
-                        Throw New TomlSyntaxException($"時間が不正です:{token}")
+                        Throw New TomlSyntaxException(GetMessage("E016", token))
                     End If
                     If token(i) = ByteMinus Then ohour = -ohour
                     Dim omint = (token(i + 4) - ByteCh0) * 10 + (token(i + 5) - ByteCh0)
                     If omint < 0 OrElse omint > 59 Then
-                        Throw New TomlSyntaxException($"分が不正です:{token}")
+                        Throw New TomlSyntaxException(GetMessage("E017", token))
                     End If
                     Return (1, Nothing, New DateTimeOffset(year, moth, dayd, hour, mint, secd, mill, New TimeSpan(ohour, omint, 0)))
                 End If
@@ -580,7 +588,7 @@ Public Module TomlEvaluation
             Return (0, New Date(year, moth, dayd, hour, mint, secd, mill), Nothing)
 
         Catch ex As Exception
-            Throw New TomlSyntaxException($"日付が取得できませんでした:{token}")
+            Throw New TomlSyntaxException(GetMessage("E018", token))
         End Try
     End Function
 
@@ -603,7 +611,7 @@ Public Module TomlEvaluation
             Return New TimeSpan(0, hour, mint, secd, mill)
 
         Catch ex As Exception
-            Throw New TomlSyntaxException($"時間が取得できませんでした:{token}", ex)
+            Throw New TomlSyntaxException(GetMessage("E019", token))
         End Try
     End Function
 

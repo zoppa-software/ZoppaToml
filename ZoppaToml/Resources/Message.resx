@@ -135,4 +135,49 @@
   <data name="E006" xml:space="preserve">
     <value>The name of the table array is duplicated.:{0}</value>
   </data>
+  <data name="E007" xml:space="preserve">
+    <value>Already defined in a non-table.:{0}</value>
+  </data>
+  <data name="E008" xml:space="preserve">
+    <value>Unknown token.:{0}</value>
+  </data>
+  <data name="E009" xml:space="preserve">
+    <value>Illegal numeric character.:{0}</value>
+  </data>
+  <data name="E010" xml:space="preserve">
+    <value>Failed to get key string.:{0}</value>
+  </data>
+  <data name="E011" xml:space="preserve">
+    <value>Unknown escape sequence.:{0}</value>
+  </data>
+  <data name="E012" xml:space="preserve">
+    <value>Failed to get integer.:{0}</value>
+  </data>
+  <data name="E013" xml:space="preserve">
+    <value>Failed to get the real number.:{0}</value>
+  </data>
+  <data name="E014" xml:space="preserve">
+    <value>The inline table could not be retrieved.:{0}</value>
+  </data>
+  <data name="E015" xml:space="preserve">
+    <value>The array could not be retrieved.:{0}</value>
+  </data>
+  <data name="E016" xml:space="preserve">
+    <value>Time is incorrect.:{0}</value>
+  </data>
+  <data name="E017" xml:space="preserve">
+    <value>The minutes are incorrect.:{0}</value>
+  </data>
+  <data name="E018" xml:space="preserve">
+    <value>The date could not be retrieved:{0}</value>
+  </data>
+  <data name="E019" xml:space="preserve">
+    <value>Failed to get time.:{0}</value>
+  </data>
+  <data name="E020" xml:space="preserve">
+    <value>The value cannot be subscript-referenced.</value>
+  </data>
+  <data name="E021" xml:space="preserve">
+    <value>The value cannot be referenced by name.</value>
+  </data>
 </root>

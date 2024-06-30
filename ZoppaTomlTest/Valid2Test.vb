@@ -74,4 +74,15 @@ Public Class Valid2Test
         Assert.Equal("There is no escape\", doc.lit_multiline_end.GetValue(Of String)())
     End Sub
 
+    <Fact>
+    Sub StringTest08()
+        Dim doc As Object = TomlDocument.LoadFromFile("valid\string\hex-escape.toml")
+
+        Assert.Equal($"hello{vbLf}", doc.hello.GetValue(Of String)())
+        Assert.Equal("Sørmirbæren", doc("higher-than-127").GetValue(Of String)())
+
+        Assert.Equal("\x20 \x09 \x0d\x0a", doc("literal").GetValue(Of String)())
+        Assert.Equal($"\x20 \x09 \x0d\x0a{vbLf}", doc("multiline-literal").GetValue(Of String)())
+    End Sub
+
 End Class

@@ -27,7 +27,7 @@ Public MustInherit Class TomlValue
     ''' <returns>値の型。</returns>
     Public ReadOnly Property GetValueType(index As Integer) As Type Implements ITomlElement.GetValueType
         Get
-            Return Me.GetObject().GetType()
+            Throw New NotSupportedException(GetMessage("E020"))
         End Get
     End Property
 
@@ -35,7 +35,7 @@ Public MustInherit Class TomlValue
     ''' <returns>値の数。</returns>
     Public ReadOnly Property Length As Integer Implements ITomlElement.Length
         Get
-            Return 0
+            Return 1
         End Get
     End Property
 
@@ -44,7 +44,7 @@ Public MustInherit Class TomlValue
     ''' <returns>要素。</returns>
     Default Public ReadOnly Property Items(keyName As String) As ITomlElement Implements ITomlElement.Items
         Get
-            Throw New NotSupportedException("値は名前参照できません")
+            Throw New NotSupportedException(GetMessage("E021"))
         End Get
     End Property
 
@@ -53,7 +53,7 @@ Public MustInherit Class TomlValue
     ''' <returns>要素。</returns>
     Default Public ReadOnly Property Items(index As Integer) As ITomlElement Implements ITomlElement.Items
         Get
-            Throw New NotImplementedException("値は添え字参照できません")
+            Throw New NotSupportedException(GetMessage("E020"))
         End Get
     End Property
 
@@ -85,7 +85,7 @@ Public MustInherit Class TomlValue
     ''' <param name="index">インデックス。</param>
     ''' <returns>値。</returns>
     Public Function GetValue(Of T)(index As Integer) As T Implements ITomlElement.GetValue
-        Return CType(Me.GetObject(), T)
+        Throw New NotSupportedException(GetMessage("E020"))
     End Function
 
     ''' <summary>列挙子を取得します。</summary>

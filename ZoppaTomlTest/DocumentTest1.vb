@@ -133,4 +133,46 @@ Public Class DocumentTest1
         Assert.Equal("[ 1, 2, 3 ]", doc("integers").ToString())
     End Sub
 
+    <Fact>
+    Sub Case08()
+        Dim doc = TomlDocument.Load("key = ""value""")
+
+        Assert.Equal(GetType(String), doc("key").GetValueType)
+
+        Assert.Throws(Of NotSupportedException)(
+            Sub()
+                Assert.Equal(GetType(String), doc("key").GetValueType(0))
+            End Sub
+        )
+
+        Assert.Equal(1, doc("key").Length)
+
+        Assert.Throws(Of NotSupportedException)(
+            Sub()
+                Assert.Equal("value", doc("key")("noname").GetValue(Of String)())
+            End Sub
+        )
+
+        Assert.Throws(Of NotSupportedException)(
+            Sub()
+                Assert.Equal("value", doc("key")(0).GetValue(Of String)())
+            End Sub
+        )
+
+        Assert.Throws(Of NotSupportedException)(
+            Sub()
+                Assert.Equal("value", doc("key").GetValue(Of String)(0))
+            End Sub
+        )
+
+
+        For Each itm In doc("key")
+            Assert.Equal("value", itm.GetValue(Of String)())
+        Next
+
+        Assert.Equal(GetType(String), doc("key").Get.GetType())
+
+        Assert.Equal("""value""", doc("key").ToString())
+    End Sub
+
 End Class

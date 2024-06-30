@@ -4,7 +4,12 @@
     <RootNamespace>ZoppaToml</RootNamespace>
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageLicenseFile>License.txt</PackageLicenseFile>
-	<Version>0.1.0</Version>
+	<Version>0.1.1</Version>
+	<Authors>zoppa-software</Authors>
+	<Copyright>2024 © zoppa-software</Copyright>
+	<PackageProjectUrl>https://github.com/zoppa-software/ZoppaToml</PackageProjectUrl>
+	<PackageReadmeFile>README.md</PackageReadmeFile>
+	<RepositoryUrl>https://github.com/zoppa-software/ZoppaToml.git</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
@@ -28,6 +33,10 @@
 
   <ItemGroup>
     <None Update="License.txt">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Update="README.md">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>

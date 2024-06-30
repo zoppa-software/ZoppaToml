@@ -135,4 +135,49 @@
   <data name="E006" xml:space="preserve">
     <value>テーブル配列の名前が重複しています。:{0}</value>
   </data>
+  <data name="E007" xml:space="preserve">
+    <value>既にテーブル以外で定義されています。:{0}</value>
+  </data>
+  <data name="E008" xml:space="preserve">
+    <value>不明なトークンです。:{0}</value>
+  </data>
+  <data name="E009" xml:space="preserve">
+    <value>不正な数値文字です。:{0}</value>
+  </data>
+  <data name="E010" xml:space="preserve">
+    <value>キー文字列が取得できませんでした。:{0}</value>
+  </data>
+  <data name="E011" xml:space="preserve">
+    <value>不明なエスケープシーケンスです。:{0}</value>
+  </data>
+  <data name="E012" xml:space="preserve">
+    <value>整数が取得できませんでした。:{0}</value>
+  </data>
+  <data name="E013" xml:space="preserve">
+    <value>実数が取得できませんでした。:{0}</value>
+  </data>
+  <data name="E014" xml:space="preserve">
+    <value>インラインテーブルが取得できませんでした。:{0}</value>
+  </data>
+  <data name="E015" xml:space="preserve">
+    <value>配列が取得できませんでした。:{0}</value>
+  </data>
+  <data name="E016" xml:space="preserve">
+    <value>時間が不正です。:{0}</value>
+  </data>
+  <data name="E017" xml:space="preserve">
+    <value>分が不正です。:{0}</value>
+  </data>
+  <data name="E018" xml:space="preserve">
+    <value>日付が取得できませんでした。:{0}</value>
+  </data>
+  <data name="E019" xml:space="preserve">
+    <value>時間が取得できませんでした。:{0}</value>
+  </data>
+  <data name="E020" xml:space="preserve">
+    <value>値は添え字参照できません。</value>
+  </data>
+  <data name="E021" xml:space="preserve">
+    <value>値は名前参照できません。</value>
+  </data>
 </root>

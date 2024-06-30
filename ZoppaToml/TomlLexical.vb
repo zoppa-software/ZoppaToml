@@ -898,7 +898,7 @@ Public Module TomlLexical
                             pointer.Skip(1)
                             needSplit = False
                         Else
-                            Throw New TomlSyntaxException($"要素が正しく , で区切られていません:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
+                            Throw New TomlSyntaxException($"配列の要素がカンマで区切られていません:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
                         End If
 
                     Case ByteSharp
@@ -951,7 +951,7 @@ Public Module TomlLexical
                             pointer.Skip(1)
                             needSplit = False
                         Else
-                            Throw New TomlSyntaxException($"要素が正しく , で区切られていません:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
+                            Throw New TomlSyntaxException($"項目の要素がカンマで区切られていません:{raw.GetPointer(start).TakeChar(pointer.Index - start + 1)}")
                         End If
 
                     Case ByteSharp
