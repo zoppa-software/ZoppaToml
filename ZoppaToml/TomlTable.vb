@@ -47,7 +47,7 @@ Public NotInheritable Class TomlTable
                     Return res
                 End If
             End If
-            Throw New KeyNotFoundException("指定のキーの要素がありません")
+            Throw New KeyNotFoundException(GetMessage("E023"))
         End Get
     End Property
 
@@ -56,7 +56,7 @@ Public NotInheritable Class TomlTable
     ''' <returns>要素。</returns>
     Default Public ReadOnly Property Items(index As Integer) As ITomlElement Implements ITomlElement.Items
         Get
-            Throw New NotImplementedException("テーブルは添え字参照できません")
+            Throw New NotImplementedException(GetMessage("E024"))
         End Get
     End Property
 
@@ -101,10 +101,10 @@ Public NotInheritable Class TomlTable
                 If res IsNot Nothing Then
                     current = res
                 Else
-                    Throw New KeyNotFoundException($"指定の名称のテーブルがありません:{key}")
+                    Throw New KeyNotFoundException(GetMessage("E025", key))
                 End If
             Else
-                Throw New KeyNotFoundException($"指定の名称のテーブルがありません:{key}")
+                Throw New KeyNotFoundException(GetMessage("E025", key))
             End If
         Next
 
@@ -116,7 +116,7 @@ Public NotInheritable Class TomlTable
                 Return res
             End If
         End If
-        Throw New KeyNotFoundException($"指定の名称の要素がありません:{lastKey}")
+        Throw New KeyNotFoundException(GetMessage("E026", lastKey))
     End Function
 
     ''' <summary>列挙子を取得します。</summary>

@@ -175,9 +175,120 @@
     <value>Failed to get time.:{0}</value>
   </data>
   <data name="E020" xml:space="preserve">
-    <value>The value cannot be subscript-referenced.</value>
+    <value>The value cannot be indexed.</value>
   </data>
   <data name="E021" xml:space="preserve">
     <value>The value cannot be referenced by name.</value>
+  </data>
+  <data name="E022" xml:space="preserve">
+    <value>The string could not be retrieved.:{0}</value>
+  </data>
+  <data name="E023" xml:space="preserve">
+    <value>There is no element with the specified key.</value>
+  </data>
+  <data name="E024" xml:space="preserve">
+    <value>Tables cannot be index-referenced.</value>
+  </data>
+  <data name="E025" xml:space="preserve">
+    <value>There is no table with the specified name.:{0}</value>
+  </data>
+  <data name="E026" xml:space="preserve">
+    <value>There is no element with the specified name.:{0}</value>
+  </data>
+  <data name="E027" xml:space="preserve">
+    <value>Specifying an array that is out of bounds.</value>
+  </data>
+  <data name="E028" xml:space="preserve">
+    <value>The table definition must be a new row. :{0}</value>
+  </data>
+  <data name="E029" xml:space="preserve">
+    <value>The key, value must be in a new row. :{0}</value>
+  </data>
+  <data name="E030" xml:space="preserve">
+    <value>The table is not closed.:{0}</value>
+  </data>
+  <data name="E031" xml:space="preserve">
+    <value>The table array is not closed.:{0}</value>
+  </data>
+  <data name="E032" xml:space="preserve">
+    <value>Failed to parse the key. :{0}</value>
+  </data>
+  <data name="E033" xml:space="preserve">
+    <value>Key not found. :{0}</value>
+  </data>
+  <data name="E034" xml:space="preserve">
+    <value>There must be a single equal symbol between the key and the value. :{0}</value>
+  </data>
+  <data name="E035" xml:space="preserve">
+    <value>Failed to parse the value. :{0}</value>
+  </data>
+  <data name="E036" xml:space="preserve">
+    <value>The end of the string cannot be found. :{0}</value>
+  </data>
+  <data name="E037" xml:space="preserve">
+    <value>Three or more single quotes in a row are not allowed. :{0}</value>
+  </data>
+  <data name="E038" xml:space="preserve">
+    <value>The elements of the item are not separated by commas. :{0}</value>
+  </data>
+  <data name="E039" xml:space="preserve">
+    <value>The elements of the inline table are not separated by commas. :{0}</value>
+  </data>
+  <data name="E040" xml:space="preserve">
+    <value>Failed to parse inline table. :{0}</value>
+  </data>
+  <data name="E041" xml:space="preserve">
+    <value>The inline table is not closed. :{0}</value>
+  </data>
+  <data name="E042" xml:space="preserve">
+    <value>The elements of the array are not separated by commas. :{0}</value>
+  </data>
+  <data name="E043" xml:space="preserve">
+    <value>Failed to parse array. :{0}</value>
+  </data>
+  <data name="E044" xml:space="preserve">
+    <value>The array is not closed. :{0}</value>
+  </data>
+  <data name="E045" xml:space="preserve">
+    <value>A literal that cannot be parsed. :{0}</value>
+  </data>
+  <data name="E046" xml:space="preserve">
+    <value>Characters that cannot be used in numbers. :{0}</value>
+  </data>
+  <data name="E047" xml:space="preserve">
+    <value>Failed to parse numeric values. :{0}</value>
+  </data>
+  <data name="E048" xml:space="preserve">
+    <value>The number of digits has been exceeded. :{0}</value>
+  </data>
+  <data name="E049" xml:space="preserve">
+    <value>Both sides of the underscore must have at least one digit. :{0}</value>
+  </data>
+  <data name="E050" xml:space="preserve">
+    <value>The exponential notation is wrong. :{0}</value>
+  </data>
+  <data name="E051" xml:space="preserve">
+    <value>There is only one decimal point. :{0}</value>
+  </data>
+  <data name="E052" xml:space="preserve">
+    <value>Both sides of the decimal point must have at least one digit. :{0}</value>
+  </data>
+  <data name="E053" xml:space="preserve">
+    <value>Signed hexadecimal numbers are not allowed. :{0}</value>
+  </data>
+  <data name="E054" xml:space="preserve">
+    <value>Signed octal numbers are not allowed. :{0}</value>
+  </data>
+  <data name="E055" xml:space="preserve">
+    <value>Signed binary numbers are not allowed. :{0}</value>
+  </data>
+  <data name="E056" xml:space="preserve">
+    <value>Leading zeros are not allowed. :{0}</value>
+  </data>
+  <data name="E057" xml:space="preserve">
+    <value>Failed to parse time. :{0}</value>
+  </data>
+  <data name="E058" xml:space="preserve">
+    <value>Failed to parse the date. :{0}</value>
   </data>
 </root>

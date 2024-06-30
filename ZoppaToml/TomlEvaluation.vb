@@ -270,11 +270,11 @@ Public Module TomlEvaluation
 
             Else
                 ' "、'で囲まれていない場合、エラー
-                Throw New TomlSyntaxException($"文字列が取得できませんでした:{token}")
+                Throw New TomlSyntaxException(GetMessage("E022", token))
             End If
 
         Catch ex As Exception
-            Throw New TomlSyntaxException($"文字列が取得できませんでした:{token}", ex)
+            Throw New TomlSyntaxException(GetMessage("E022", token), ex)
         End Try
     End Function
 
